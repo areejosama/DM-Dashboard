@@ -1,0 +1,135 @@
+.tree-container {
+  width: 100%;
+  overflow-x: auto; /* للتعامل مع الشاشات الصغيرة */
+  margin-top: 50px;
+}
+
+.form-label{
+  margin-top: 15px;
+}
+/* الـ Row (سواء الهيدر أو الـ Sub-Account أو الـ Total) */
+.table-row {
+  display: grid;
+  grid-template-columns: 1fr 1fr 1fr; /* تخصيص العروض: Sub-Account أعرض، Previous وCurrent متساويين */
+  align-items: center;
+  width: 100%;
+  padding: 5px 0;
+}
+
+/* الخلايا داخل الـ Row */
+.table-cell {
+  padding: 8px;
+  text-align: center;
+}
+
+/* تخصيص المحاذاة لعمود Sub-Account */
+.sub-account-header,
+.sub-account-name {
+  text-align: left;
+}
+
+/* تنسيق الهيدر */
+.table-header {
+  background-color: #f5f5f5;
+  font-weight: bold;
+}
+
+/* تنسيق الـ Total Row */
+.total-row {
+  font-weight: bold;
+  border-top: 2px solid #ddd;
+  margin-top: 10px;
+  padding-top: 10px;
+}
+
+.total-row .sub-account-name {
+  font-weight: bold;
+}
+
+/* تنسيق الـ Input داخل Current Report */
+.current-report input {
+  width: 50%;
+  padding: 5px;
+  box-sizing: border-box;
+  border: 1px solid #ccc;
+  border-radius: 4px;
+}
+
+/* تنسيق الـ Expand Button */
+.expand-btn {
+  background: none;
+  border: none;
+  cursor: pointer;
+  text-align: left;
+  width: 100%;
+}
+
+/* Media Query للشاشات الصغيرة */
+@media (max-width: 768px) {
+  .table-row {
+    grid-template-columns: 1fr; /* كل شيء في عمود واحد */
+    gap: 15px;
+  }
+
+  .table-cell {
+    text-align: left;
+    padding: 5px 0;
+  }
+
+  .previous-report-header::before,
+  .previous-report::before,
+  .current-report-header::before,
+  .current-report::before {
+    content: attr(data-label);
+    font-weight: bold;
+    display: inline-block;
+    margin-right: 20px;
+  }
+
+  .current-report input {
+    width: 100%;
+  }
+}
+
+.add-sub-account-btn {
+  background-color: #28a745;
+  color: white;
+  border: none;
+  padding: 5px 10px;
+  border-radius: 4px;
+  cursor: pointer;
+  margin-left: 10px;
+}
+
+.add-sub-account-btn:hover {
+  background-color: #218838;
+}
+
+.add-sub-account-container {
+  display: flex;
+  align-items: center;
+  margin-top: 10px;
+  margin-bottom: 10px;
+  margin-left: 15px; /* محاذاة مع الـ Sub-Accounts */
+}
+
+.remove-sub-account-btn {
+  background-color: #dc3545;
+  color: white;
+  border: none;
+  padding: 5px 10px;
+  border-radius: 4px;
+  cursor: pointer;
+  margin-left: 10px;
+}
+
+.remove-sub-account-btn:hover {
+  background-color: #c82333;
+}
+
+.no-sub-accounts-message {
+  margin-top: 10px;
+  margin-left: 15px;
+  color: #666;
+  font-style: italic;
+}
