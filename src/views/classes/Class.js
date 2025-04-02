@@ -34,7 +34,7 @@ const Dashboard = () => {
   const [formData, setFormData] = useState({ name: '' });
   const [editId, setEditId] = useState(null);
 
-  const TOKEN = 'arij_eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6IjY3YzIwMTAxYTJkMDU1NWQ2NDg1OGNmYyIsInJvbGUiOiJhZG1pbiIsImlhdCI6MTc0MDc2NzUwMn0.7RROT-EVMHkt40SNNkmez-ciSlnuWHIakd0ytSfb3IQ';
+  const TOKEN = 'arij_eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6IjY3ZWRhMDViZDMwMDA5YzMzYzVmMjA1NSIsInJvbGUiOiJtYW5hZ2VyIiwiaWF0IjoxNzQzNjI3NjQxfQ.M5naIsuddc3UZ7Oe7ZTfABdZVYQyw_i-80MU4daCoZE';
 
   useEffect(() => {
     fetchMainClasses();
@@ -44,7 +44,7 @@ const Dashboard = () => {
     try {
       setLoading(true);
       console.log('Fetching Main Classes with Token:', TOKEN);
-      const response = await axios.get('http://localhost:8000/deepmetrics/api/v1/mainclass', {
+      const response = await axios.get('https://deepmetrics-be.onrender.com/deepmetrics/api/v1/mainclass', {
         headers: {
           token: TOKEN,
         },
@@ -102,7 +102,7 @@ const Dashboard = () => {
       const payload = { name: formData.name.trim() };
       console.log('Creating Main Class with Payload:', payload);
       const response = await axios.post(
-        'http://localhost:8000/deepmetrics/api/v1/mainclass',
+        'https://deepmetrics-be.onrender.com/deepmetrics/api/v1/mainclass',
         payload,
         {
           headers: {
@@ -158,7 +158,7 @@ const Dashboard = () => {
       const payload = { name: formData.name.trim() };
       console.log('Updating Main Class with Payload:', payload, 'ID:', editId);
       const response = await axios.put(
-        `http://localhost:8000/deepmetrics/api/v1/mainclass/${editId}`,
+        `https://deepmetrics-be.onrender.com/deepmetrics/api/v1/mainclass/${editId}`,
         payload,
         {
           headers: {
@@ -192,7 +192,7 @@ const Dashboard = () => {
     if (window.confirm('Are you sure you want to delete this Main Class?')) {
       try {
         console.log('Deleting Main Class with ID:', classId);
-        await axios.delete(`http://localhost:8000/deepmetrics/api/v1/mainclass/${classId}`, {
+        await axios.delete(`https://deepmetrics-be.onrender.com/deepmetrics/api/v1/mainclass/${classId}`, {
           headers: {
             token: TOKEN,
           },

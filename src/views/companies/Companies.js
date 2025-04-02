@@ -41,12 +41,13 @@ const Tables = () => {
     currency: '',
   })
   const [editCompanyId, setEditCompanyId] = useState(null) // لحفظ معرف الشركة التي يتم تعديلها
+  const TOKEN = 'arij_eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6IjY3ZWRhMDViZDMwMDA5YzMzYzVmMjA1NSIsInJvbGUiOiJtYW5hZ2VyIiwiaWF0IjoxNzQzNjI3NjQxfQ.M5naIsuddc3UZ7Oe7ZTfABdZVYQyw_i-80MU4daCoZE';
 
   // جلب بيانات الشركات من الـ API
   useEffect(() => {
     const fetchCompanies = async () => {
       try {
-        const response = await axios.get('http://localhost:8000/deepmetrics/api/v1/company')
+        const response = await axios.get('https://deepmetrics-be.onrender.com/deepmetrics/api/v1/company')
         setCompanies(response.data.companies || []) // التأكد من أن البيانات موجودة
         setLoading(false)
       } catch (err) {
@@ -59,7 +60,7 @@ const Tables = () => {
     // جلب بيانات القطاعات من الـ API
      const fetchSectors = async () => {
         try {
-            const response = await axios.get('http://localhost:8000/deepmetrics/api/v1/sector');
+            const response = await axios.get('https://deepmetrics-be.onrender.com/deepmetrics/api/v1/sector');
             console.log('Sectors API Response:', response.data.allsectors); // تحقق من البيانات
     
             // التأكد من أن `allsectors` عبارة عن مصفوفة، وإلا تحويلها إلى مصفوفة
@@ -139,10 +140,10 @@ const Tables = () => {
     formDataToSend.append("image", formData.image); 
 
     try {
-      let response = await axios.post('http://localhost:8000/deepmetrics/api/v1/company', formDataToSend, {
+      let response = await axios.post('https://deepmetrics-be.onrender.com/deepmetrics/api/v1/company', formDataToSend, {
         headers: {
           'Content-Type': 'multipart/form-data',
-           token: 'arij_eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6IjY3YzIwMTAxYTJkMDU1NWQ2NDg1OGNmYyIsInJvbGUiOiJhZG1pbiIsImlhdCI6MTc0MDc2NzUwMn0.7RROT-EVMHkt40SNNkmez-ciSlnuWHIakd0ytSfb3IQ'
+           token: TOKEN
         },
       })
       console.log('API Response:', response.data) // تسجيل الاستجابة
@@ -206,10 +207,10 @@ const Tables = () => {
     }
 
     try {
-      const response = await axios.put(`http://localhost:8000/deepmetrics/api/v1/company/${editCompanyId}`, formDataToSend, {
+      const response = await axios.put(`https://deepmetrics-be.onrender.com/deepmetrics/api/v1/company/${editCompanyId}`, formDataToSend, {
         headers: {
             'Content-Type': 'multipart/form-data',
-            token: 'arij_eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6IjY3YzIwMTAxYTJkMDU1NWQ2NDg1OGNmYyIsInJvbGUiOiJhZG1pbiIsImlhdCI6MTc0MDc2NzUwMn0.7RROT-EVMHkt40SNNkmez-ciSlnuWHIakd0ytSfb3IQ'
+            token: TOKEN
         },
       })
       setCompanies(companies.map(c => c._id === editCompanyId ? response.data.brand || response.data.company || response.data.data : c))
@@ -229,10 +230,10 @@ const Tables = () => {
   const handleDelete = async (companyId) => {
     if (window.confirm('Are you sure you want to delete this company?')) {
       try {
-        await axios.delete(`http://localhost:8000/deepmetrics/api/v1/company/${companyId}`,{
+        await axios.delete(`https://deepmetrics-be.onrender.com/deepmetrics/api/v1/company/${companyId}`,{
             headers: {
                 'Content-Type': 'multipart/form-data',
-                token: 'arij_eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6IjY3YzIwMTAxYTJkMDU1NWQ2NDg1OGNmYyIsInJvbGUiOiJhZG1pbiIsImlhdCI6MTc0MDc2NzUwMn0.7RROT-EVMHkt40SNNkmez-ciSlnuWHIakd0ytSfb3IQ'
+                token: TOKEN
             },
         })
         setCompanies(companies.filter(c => c._id !== companyId))

@@ -32,7 +32,7 @@ const AddFinancialReportPage = () => {
 
   const fetchCompanies = async () => {
     try {
-      const { data: { companies } } = await axios.get('http://localhost:8000/deepmetrics/api/v1/company', {
+      const { data: { companies } } = await axios.get('https://deepmetrics-be.onrender.com/deepmetrics/api/v1/company', {
         headers: { token: TOKEN },
       });
       setCompanies(companies || []);
@@ -43,7 +43,7 @@ const AddFinancialReportPage = () => {
 
   const fetchReports = async () => {
     try {
-      const { data: { data } } = await axios.get('http://localhost:8000/deepmetrics/api/v1/mainclass/finData', {
+      const { data: { data } } = await axios.get('https://deepmetrics-be.onrender.com/deepmetrics/api/v1/mainclass/finData', {
         headers: { token: TOKEN },
       });
       setReports(data || []);
@@ -54,7 +54,7 @@ const AddFinancialReportPage = () => {
 
   const fetchMainClasses = async () => {
     try {
-      const { data: { data } } = await axios.get('http://localhost:8000/deepmetrics/api/v1/mainclass', {
+      const { data: { data } } = await axios.get('https://deepmetrics-be.onrender.com/deepmetrics/api/v1/mainclass', {
         headers: { token: TOKEN },
       });
       setMainClasses(data || []);
@@ -76,7 +76,7 @@ const AddFinancialReportPage = () => {
 
   const fetchPreviousReport = async (companyId) => {
     try {
-      const { data } = await axios.get(`http://localhost:8000/deepmetrics/api/v1/mainclass/finData/company/${companyId}/latest`, {
+      const { data } = await axios.get(`https://deepmetrics-be.onrender.com/deepmetrics/api/v1/mainclass/finData/company/${companyId}/latest`, {
         headers: { token: TOKEN },
       });
       console.log('previousReport full response:', data);
@@ -104,7 +104,7 @@ const AddFinancialReportPage = () => {
 
   const fetchClassData = async (mainClassId) => {
     try {
-      const { data } = await axios.get(`http://localhost:8000/deepmetrics/api/v1/mainclass/all/${mainClassId}`, {
+      const { data } = await axios.get(`https://deepmetrics-be.onrender.com/deepmetrics/api/v1/mainclass/all/${mainClassId}`, {
         headers: { token: TOKEN },
       });
       const classStructure = {};
@@ -439,7 +439,7 @@ const AddFinancialReportPage = () => {
         allclasses: cleanedSavedData,
       };
       console.log('[submitReport] Payload:', payload);
-      await axios.post('http://localhost:8000/deepmetrics/api/v1/mainclass/finRepo', payload, {
+      await axios.post('https://deepmetrics-be.onrender.com/deepmetrics/api/v1/mainclass/finRepo', payload, {
         headers: { token: TOKEN },
       });
       alert('Report submitted successfully!');

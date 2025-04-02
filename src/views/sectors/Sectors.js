@@ -35,12 +35,13 @@ const Tables = () => {
     Sector: '', // اسم القطاع
   })
   const [sectorid, setEditSectorId] = useState(null) // لحفظ معرف القطاع الذي يتم تعديله
+  const TOKEN = 'arij_eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6IjY3ZWRhMDViZDMwMDA5YzMzYzVmMjA1NSIsInJvbGUiOiJtYW5hZ2VyIiwiaWF0IjoxNzQzNjI3NjQxfQ.M5naIsuddc3UZ7Oe7ZTfABdZVYQyw_i-80MU4daCoZE';
 
   // جلب بيانات القطاعات من الـ API
   useEffect(() => {
     const fetchSectors = async () => {
       try {
-        const response = await axios.get('http://localhost:8000/deepmetrics/api/v1/sector');
+        const response = await axios.get('https://deepmetrics-be.onrender.com/deepmetrics/api/v1/sector');
         console.log('Sectors API Response:', response.data.allsectors); // تحقق من البيانات
 
         const sectorData = Array.isArray(response.data.allsectors) 
@@ -85,9 +86,9 @@ const Tables = () => {
     }
 
     try {
-      let response = await axios.post('http://localhost:8000/deepmetrics/api/v1/sector', { Sector: formData.Sector }, {
+      let response = await axios.post('https://deepmetrics-be.onrender.com/deepmetrics/api/v1/sector', { Sector: formData.Sector }, {
         headers: {
-          'token': 'arij_eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6IjY3YzIwMTAxYTJkMDU1NWQ2NDg1OGNmYyIsInJvbGUiOiJhZG1pbiIsImlhdCI6MTc0MDc2NzUwMn0.7RROT-EVMHkt40SNNkmez-ciSlnuWHIakd0ytSfb3IQ',
+          'token': TOKEN
         },
       });
       setSectors([...sectors, response.data]);
@@ -125,10 +126,10 @@ const Tables = () => {
     }
 
     try {
-      const response = await axios.put(`http://localhost:8000/deepmetrics/api/v1/sector/${sectorid}`, { Sector: formData.Sector }, {
+      const response = await axios.put(`https://deepmetrics-be.onrender.com/deepmetrics/api/v1/sector/${sectorid}`, { Sector: formData.Sector }, {
         headers: {
           'Content-Type': 'application/json', 
-          'token': 'arij_eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6IjY3YmNhNmJkODc0YjJiODczOGY1NmI3YSIsInJvbGUiOiJhZG1pbiIsImlhdCI6MTc0MDQxNjcxNX0.j-vfzlffh5Orru10hBVHpn2AMJOUJfBtxpIDOZSO9DI',
+          'token': TOKEN
         },
       });
       console.log('Update response:', response.data);
@@ -151,9 +152,9 @@ const Tables = () => {
     console.log('Deleting sector with ID:', sectorid);
     if (window.confirm('Are you sure you want to delete this sector?')) {
       try {
-        const response = await axios.delete(`http://localhost:8000/deepmetrics/api/v1/sector/${sectorid}`, {
+        const response = await axios.delete(`https://deepmetrics-be.onrender.com/deepmetrics/api/v1/sector/${sectorid}`, {
           headers: {
-            'token': 'arij_eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6IjY3YmNhNmJkODc0YjJiODczOGY1NmI3YSIsInJvbGUiOiJhZG1pbiIsImlhdCI6MTc0MDQxNjcxNX0.j-vfzlffh5Orru10hBVHpn2AMJOUJfBtxpIDOZSO9DI',
+            'token': TOKEN
           },
         });
         console.log('Delete response:', response.data);

@@ -36,7 +36,7 @@ const MainAccountDashboard = () => {
   const [formData, setFormData] = useState({ account: '', subsubclassid: '' }); // استبدال subsubclass بـ account و subclassid بـ subsubclassid
   const [editId, setEditId] = useState(null);
 
-  const TOKEN = 'arij_eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6IjY3YzIwMTAxYTJkMDU1NWQ2NDg1OGNmYyIsInJvbGUiOiJhZG1pbiIsImlhdCI6MTc0MDc2NzUwMn0.7RROT-EVMHkt40SNNkmez-ciSlnuWHIakd0ytSfb3IQ';
+  const TOKEN = 'arij_eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6IjY3ZWRhMDViZDMwMDA5YzMzYzVmMjA1NSIsInJvbGUiOiJtYW5hZ2VyIiwiaWF0IjoxNzQzNjI3NjQxfQ.M5naIsuddc3UZ7Oe7ZTfABdZVYQyw_i-80MU4daCoZE';
 
   useEffect(() => {
     fetchSubSubClasses();
@@ -45,7 +45,7 @@ const MainAccountDashboard = () => {
 
   const fetchSubSubClasses = async () => {
     try {
-      const response = await axios.get('http://localhost:8000/deepmetrics/api/v1/mainclass/sub2class', {
+      const response = await axios.get('https://deepmetrics-be.onrender.com/deepmetrics/api/v1/mainclass/sub2class', {
         headers: { token: TOKEN },
       });
       const subSubClassesData = response.data.data || response.data;
@@ -67,7 +67,7 @@ const MainAccountDashboard = () => {
     try {
       setLoading(true);
       console.log('Fetching Main Accounts with Token:', TOKEN);
-      const response = await axios.get('http://localhost:8000/deepmetrics/api/v1/mainclass/accounts', {
+      const response = await axios.get('https://deepmetrics-be.onrender.com/deepmetrics/api/v1/mainclass/accounts', {
         headers: { token: TOKEN },
       });
       const mainAccountsData = response.data.data || response.data;
@@ -127,7 +127,7 @@ const MainAccountDashboard = () => {
       const payload = { account: formData.account.trim(), subsubclassid: formData.subsubclassid };
       console.log('Creating Main Account with Payload:', payload);
       const response = await axios.post(
-        'http://localhost:8000/deepmetrics/api/v1/mainclass/account',
+        'https://deepmetrics-be.onrender.com/deepmetrics/api/v1/mainclass/account',
         payload,
         {
           headers: { 'Content-Type': 'application/json', token: TOKEN },
@@ -175,7 +175,7 @@ const MainAccountDashboard = () => {
       const payload = { account: formData.account.trim(), subsubclassid: formData.subsubclassid };
       console.log('Updating Main Account with Payload:', payload, 'ID:', editId);
       const response = await axios.put(
-        `http://localhost:8000/deepmetrics/api/v1/mainclass/account/${editId}`,
+        `https://deepmetrics-be.onrender.com/deepmetrics/api/v1/mainclass/account/${editId}`,
         payload,
         {
           headers: { 'Content-Type': 'application/json', token: TOKEN },
@@ -218,7 +218,7 @@ const MainAccountDashboard = () => {
     if (window.confirm('Are you sure you want to delete this Main Account?')) {
       try {
         console.log('Deleting Main Account with ID:', mainAccountId);
-        await axios.delete(`http://localhost:8000/deepmetrics/api/v1/mainclass/account/${mainAccountId}`, {
+        await axios.delete(`https://deepmetrics-be.onrender.com/deepmetrics/api/v1/mainclass/account/${mainAccountId}`, {
           headers: { token: TOKEN },
         });
         setMainAccounts(mainAccounts.filter((m) => m._id !== mainAccountId));

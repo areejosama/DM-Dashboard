@@ -53,7 +53,7 @@ const FinancialDataForm = () => {
 
   const fetchCompanies = async () => {
     try {
-      const response = await axios.get('http://localhost:8000/deepmetrics/api/v1/company', {
+      const response = await axios.get('https://deepmetrics-be.onrender.com/deepmetrics/api/v1/company', {
         headers: { token: TOKEN },
       });
       const companiesData = response.data.companies;
@@ -78,7 +78,7 @@ const FinancialDataForm = () => {
   const fetchFinancialData = async () => {
     try {
       setLoading(true);
-      const response = await axios.get('http://localhost:8000/deepmetrics/api/v1/mainclass/finData', {
+      const response = await axios.get('https://deepmetrics-be.onrender.com/deepmetrics/api/v1/mainclass/finData', {
         headers: { token: TOKEN },
       });
       const financialDataResponse = response.data.data || response.data;
@@ -121,7 +121,7 @@ const FinancialDataForm = () => {
         companyid: formData.companyid,
         status: formData.status, // إرسال status بدلاً من allclasses
       };
-      await axios.post('http://localhost:8000/deepmetrics/api/v1/mainclass/finData', payload, {
+      await axios.post('https://deepmetrics-be.onrender.com/deepmetrics/api/v1/mainclass/finData', payload, {
         headers: { 'Content-Type': 'application/json', token: TOKEN },
       });
       setSuccess('Financial Data added successfully!');
@@ -162,7 +162,7 @@ const FinancialDataForm = () => {
         companyid: formData.companyid,
         status: formData.status, 
       };
-      await axios.put(`http://localhost:8000/deepmetrics/api/v1/mainclass/finData/${editId}`, payload, {
+      await axios.put(`https://deepmetrics-be.onrender.com/deepmetrics/api/v1/mainclass/finData/${editId}`, payload, {
         headers: { 'Content-Type': 'application/json', token: TOKEN },
       });
       setSuccess('Financial Data updated successfully!');
@@ -183,7 +183,7 @@ const FinancialDataForm = () => {
     if (!confirm('Are you sure you want to delete this record?')) return;
     setLoading(true);
     try {
-      await axios.delete(`http://localhost:8000/deepmetrics/api/v1/mainclass/finData/${id}`, {
+      await axios.delete(`https://deepmetrics-be.onrender.com/deepmetrics/api/v1/mainclass/finData/${id}`, {
         headers: { token: TOKEN },
       });
       setSuccess('Financial Data deleted successfully!');

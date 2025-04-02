@@ -36,7 +36,7 @@ const SubClassDashboard = () => {
   const [formData, setFormData] = useState({ name: '', classid: '' });
   const [editId, setEditId] = useState(null);
 
-  const TOKEN = 'arij_eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6IjY3YzIwMTAxYTJkMDU1NWQ2NDg1OGNmYyIsInJvbGUiOiJhZG1pbiIsImlhdCI6MTc0MDc2NzUwMn0.7RROT-EVMHkt40SNNkmez-ciSlnuWHIakd0ytSfb3IQ';
+  const TOKEN = 'arij_eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6IjY3ZWRhMDViZDMwMDA5YzMzYzVmMjA1NSIsInJvbGUiOiJtYW5hZ2VyIiwiaWF0IjoxNzQzNjI3NjQxfQ.M5naIsuddc3UZ7Oe7ZTfABdZVYQyw_i-80MU4daCoZE';
 
   useEffect(() => {
     fetchMainClasses();
@@ -45,7 +45,7 @@ const SubClassDashboard = () => {
 
   const fetchMainClasses = async () => {
     try {
-      const response = await axios.get('http://localhost:8000/deepmetrics/api/v1/mainclass', {
+      const response = await axios.get('https://deepmetrics-be.onrender.com/deepmetrics/api/v1/mainclass', {
         headers: { token: TOKEN },
       });
       const mainClassesData = response.data.data || response.data;
@@ -67,7 +67,7 @@ const SubClassDashboard = () => {
     try {
       setLoading(true);
       console.log('Fetching Sub Classes with Token:', TOKEN);
-      const response = await axios.get('http://localhost:8000/deepmetrics/api/v1/mainclass/subclass', {
+      const response = await axios.get('https://deepmetrics-be.onrender.com/deepmetrics/api/v1/mainclass/subclass', {
         headers: { token: TOKEN },
       });
       const subClassesData = response.data.data || response.data;
@@ -126,7 +126,7 @@ const SubClassDashboard = () => {
       const payload = { subclass: formData.name.trim(), classid: formData.classid };
       console.log('Creating Sub Class with Payload:', payload);
       const response = await axios.post(
-        'http://localhost:8000/deepmetrics/api/v1/mainclass/subclass',
+        'https://deepmetrics-be.onrender.com/deepmetrics/api/v1/mainclass/subclass',
         payload,
         {
           headers: { 'Content-Type': 'application/json', token: TOKEN },
@@ -173,7 +173,7 @@ const SubClassDashboard = () => {
       const payload = { subclass: formData.name.trim(), classid: formData.classid };
       console.log('Updating Sub Class with Payload:', payload, 'ID:', editId);
       const response = await axios.put(
-        `http://localhost:8000/deepmetrics/api/v1/mainclass/subclass/${editId}`,
+        `https://deepmetrics-be.onrender.com/deepmetrics/api/v1/mainclass/subclass/${editId}`,
         payload,
         {
           headers: { 'Content-Type': 'application/json', token: TOKEN },
@@ -208,7 +208,7 @@ const SubClassDashboard = () => {
     if (window.confirm('Are you sure you want to delete this Sub Class?')) {
         try {
             console.log('Deleting Sub Class with ID:', subClassId);
-            await axios.delete(`http://localhost:8000/deepmetrics/api/v1/mainclass/subclass/${subClassId}`, {
+            await axios.delete(`https://deepmetrics-be.onrender.com/deepmetrics/api/v1/mainclass/subclass/${subClassId}`, {
                 headers: { token: TOKEN },
             });
             setSubClasses(subClasses.filter((s) => s._id !== subClassId));

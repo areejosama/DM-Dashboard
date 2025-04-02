@@ -55,7 +55,7 @@ const FinancialDataForm = () => {
 
   const fetchFinReports = async () => {
     try {
-      const response = await axios.get('http://localhost:8000/deepmetrics/api/v1/mainclass/finRepo', { headers: { token: TOKEN } });
+      const response = await axios.get('https://deepmetrics-be.onrender.com/deepmetrics/api/v1/mainclass/finRepo', { headers: { token: TOKEN } });
       console.log('Fin Reports (All Reports - Full):', JSON.stringify(response.data.data, null, 2));
       setFinReports(response.data.data || []);
     } catch (err) {
@@ -68,7 +68,7 @@ const FinancialDataForm = () => {
   const fetchFinancialData = async () => {
     try {
       setLoading(true);
-      const response = await axios.get('http://localhost:8000/deepmetrics/api/v1/mainclass/finData', { headers: { token: TOKEN } });
+      const response = await axios.get('https://deepmetrics-be.onrender.com/deepmetrics/api/v1/mainclass/finData', { headers: { token: TOKEN } });
       console.log('Financial Data (Table Data - Full):', JSON.stringify(response.data.data, null, 2));
       setFinancialData(response.data.data || []);
       setLoading(false);
@@ -82,7 +82,7 @@ const FinancialDataForm = () => {
 
   const fetchCompanies = async () => {
     try {
-      const response = await axios.get('http://localhost:8000/deepmetrics/api/v1/company', { headers: { token: TOKEN } });
+      const response = await axios.get('https://deepmetrics-be.onrender.com/deepmetrics/api/v1/company', { headers: { token: TOKEN } });
       console.log('Companies Response:', JSON.stringify(response.data, null, 2));
       const companiesData = response.data.data || [];
       setCompanies(companiesData);
@@ -95,7 +95,7 @@ const FinancialDataForm = () => {
 
   const fetchReports = async () => {
     try {
-      const response = await axios.get('http://localhost:8000/deepmetrics/api/v1/mainclass/finData', { headers: { token: TOKEN } });
+      const response = await axios.get('https://deepmetrics-be.onrender.com/deepmetrics/api/v1/mainclass/finData', { headers: { token: TOKEN } });
       console.log('Reports Response:', JSON.stringify(response.data.data, null, 2));
       setReports(response.data.data || []);
     } catch (err) {
@@ -125,7 +125,7 @@ const FinancialDataForm = () => {
 
     try {
       console.log('Deleting financial report with ID:', id);
-      const response = await axios.delete(`http://localhost:8000/deepmetrics/api/v1/mainclass/finRepo/${id}`, {
+      const response = await axios.delete(`https://deepmetrics-be.onrender.com/deepmetrics/api/v1/mainclass/finRepo/${id}`, {
         headers: { token: TOKEN },
       });
       console.log('Delete Response:', JSON.stringify(response.data, null, 2));
@@ -145,7 +145,7 @@ const FinancialDataForm = () => {
 
   const handleEditSubmit = async () => {
     try {
-      const response = await axios.put(`http://localhost:8000/deepmetrics/api/v1/mainclass/finRepo/${editData._id}`, editData, { headers: { token: TOKEN } });
+      const response = await axios.put(`https://deepmetrics-be.onrender.com/deepmetrics/api/v1/mainclass/finRepo/${editData._id}`, editData, { headers: { token: TOKEN } });
       setFinReports(finReports.map(report => (report._id === editData._id ? response.data.data : report)));
       setFinancialData(financialData.map(data => (data._id === editData._id ? response.data.data : data)));
       setVisibleEdit(false);
