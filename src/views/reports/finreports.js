@@ -109,52 +109,52 @@ const FinancialDataForm = () => {
     setVisibleView(true);
   };
 
-  const handleEditReport = (data) => {
-    setEditData({
-      _id: data._id,
-      companyid: data.companyid?._id || '',
-      FinReport_id: data._id || '',
-    });
-    setVisibleEdit(true);
-  };
+  // const handleEditReport = (data) => {
+  //   setEditData({
+  //     _id: data._id,
+  //     companyid: data.companyid?._id || '',
+  //     FinReport_id: data._id || '',
+  //   });
+  //   setVisibleEdit(true);
+  // };
 
-  const deleteFinancialRepo = async (id) => {
-    if (!window.confirm('Are you sure you want to delete this financial report?')) {
-      return;
-    }
+  // const deleteFinancialRepo = async (id) => {
+  //   if (!window.confirm('Are you sure you want to delete this financial report?')) {
+  //     return;
+  //   }
 
-    try {
-      console.log('Deleting financial report with ID:', id);
-      const response = await axios.delete(`https://deepmetrics-be.onrender.com/deepmetrics/api/v1/mainclass/finRepo/${id}`, {
-        headers: { token: TOKEN },
-      });
-      console.log('Delete Response:', JSON.stringify(response.data, null, 2));
+  //   try {
+  //     console.log('Deleting financial report with ID:', id);
+  //     const response = await axios.delete(`https://deepmetrics-be.onrender.com/deepmetrics/api/v1/mainclass/finRepo/${id}`, {
+  //       headers: { token: TOKEN },
+  //     });
+  //     console.log('Delete Response:', JSON.stringify(response.data, null, 2));
 
-      setFinReports(prevReports => prevReports.filter(report => report._id !== id));
-      setFinancialData(prevData => prevData.filter(data => data._id !== id));
+  //     setFinReports(prevReports => prevReports.filter(report => report._id !== id));
+  //     setFinancialData(prevData => prevData.filter(data => data._id !== id));
       
-      await fetchFinReports();
-      await fetchFinancialData();
+  //     await fetchFinReports();
+  //     await fetchFinancialData();
 
-      alert('Financial report deleted successfully');
-    } catch (err) {
-      console.error('Error deleting financial report:', err.response ? err.response.data : err.message);
-      setError(`Failed to delete financial report: ${err.message}`);
-    }
-  };
+  //     alert('Financial report deleted successfully');
+  //   } catch (err) {
+  //     console.error('Error deleting financial report:', err.response ? err.response.data : err.message);
+  //     setError(`Failed to delete financial report: ${err.message}`);
+  //   }
+  // };
 
-  const handleEditSubmit = async () => {
-    try {
-      const response = await axios.put(`https://deepmetrics-be.onrender.com/deepmetrics/api/v1/mainclass/finRepo/${editData._id}`, editData, { headers: { token: TOKEN } });
-      setFinReports(finReports.map(report => (report._id === editData._id ? response.data.data : report)));
-      setFinancialData(financialData.map(data => (data._id === editData._id ? response.data.data : data)));
-      setVisibleEdit(false);
-      alert('Edited successfully');
-    } catch (err) {
-      console.error('Error editing report:', err);
-      setError('Failed to edit data');
-    }
-  };
+  // const handleEditSubmit = async () => {
+  //   try {
+  //     const response = await axios.put(`https://deepmetrics-be.onrender.com/deepmetrics/api/v1/mainclass/finRepo/${editData._id}`, editData, { headers: { token: TOKEN } });
+  //     setFinReports(finReports.map(report => (report._id === editData._id ? response.data.data : report)));
+  //     setFinancialData(financialData.map(data => (data._id === editData._id ? response.data.data : data)));
+  //     setVisibleEdit(false);
+  //     alert('Edited successfully');
+  //   } catch (err) {
+  //     console.error('Error editing report:', err);
+  //     setError('Failed to edit data');
+  //   }
+  // };
 
   if (loading && financialData.length === 0) {
     return <div>Loading...</div>;
@@ -192,12 +192,12 @@ const FinancialDataForm = () => {
                         <CButton color="info" size="sm" onClick={() => handleViewReport(data)} className="me-2">
                           <CIcon icon={cilZoom} />
                         </CButton>
-                        <CButton color="warning" size="sm" onClick={() => handleEditReport(data)} className="me-2">
+                        {/* <CButton color="warning" size="sm" onClick={() => handleEditReport(data)} className="me-2">
                           <CIcon icon={cilPencil} />
                         </CButton>
                         <CButton color="danger" size="sm" onClick={() => deleteFinancialRepo(data._id)}>
                           <CIcon icon={cilTrash} />
-                        </CButton>
+                        </CButton> */}
                       </CTableDataCell>
                     </CTableRow>
                   ))
@@ -261,7 +261,7 @@ const FinancialDataForm = () => {
               </CModalFooter>
             </CModal>
 
-            {/* Edit Modal */}
+            {/* Edit Modal
             <CModal visible={visibleEdit} onClose={() => setVisibleEdit(false)}>
               <CModalHeader>
                 <CModalTitle>Edit Financial Data</CModalTitle>
@@ -288,7 +288,7 @@ const FinancialDataForm = () => {
                 <CButton color="secondary" onClick={() => setVisibleEdit(false)}>Cancel</CButton>
                 <CButton color="primary" onClick={handleEditSubmit}>Save Changes</CButton>
               </CModalFooter>
-            </CModal>
+            </CModal> */}
           </CCardBody>
         </CCard>
       </CCol>
