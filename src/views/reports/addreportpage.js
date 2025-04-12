@@ -9,6 +9,7 @@ const AddFinancialReportPage = () => {
 
   const [companies, setCompanies] = useState([]);
   const [selectedCompany, setSelectedCompany] = useState('');
+  const [companySectorId, setCompanySectorId] = useState(null);
   const [reports, setReports] = useState([]);
   const [selectedReport, setSelectedReport] = useState('');
   const [mainClasses, setMainClasses] = useState([]);
@@ -19,8 +20,8 @@ const AddFinancialReportPage = () => {
   const [previousReport, setPreviousReport] = useState(null);
   const [savedData, setSavedData] = useState([]);
   const [completedMainClasses, setCompletedMainClasses] = useState([]);
-  const [addedSubAccounts, setAddedSubAccounts] = useState(new Set()); // State لتتبع الـ Sub-Accounts المضافة يدويًا
-  const [selectedSubAccountToAdd, setSelectedSubAccountToAdd] = useState({}); // State لتخزين الـ Sub-Account المختار من القائمة لكل Sub-Class
+  const [addedSubAccounts, setAddedSubAccounts] = useState(new Set());
+  const [selectedSubAccountToAdd, setSelectedSubAccountToAdd] = useState({});
 
   const TOKEN = 'arij_eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6IjY3ZWRhMDViZDMwMDA5YzMzYzVmMjA1NSIsInJvbGUiOiJtYW5hZ2VyIiwiaWF0IjoxNzQzNjI3NjQxfQ.M5naIsuddc3UZ7Oe7ZTfABdZVYQyw_i-80MU4daCoZE';
 
@@ -57,19 +58,46 @@ const AddFinancialReportPage = () => {
       const { data: { data } } = await axios.get('https://deepmetrics-be.onrender.com/deepmetrics/api/v1/mainclass', {
         headers: { token: TOKEN },
       });
+      console.log('Fetched Main Classes:', data);
       setMainClasses(data || []);
     } catch (err) {
       console.error('Error fetching main classes:', err);
+      setMainClasses([]);
+    }
+  };
+
+  const fetchCompanySector = async (companyId) => {
+    try {
+      const { data } = await axios.get(`https://deepmetrics-be.onrender.com/deepmetrics/api/v1/company`, {
+        headers: { token: TOKEN },
+      });
+      console.log('Company Data Response:', data.companies);
+      const selectedCompanyData = data.companies.find(company => company._id === companyId || company.id === companyId);
+      if (!selectedCompanyData) {
+        console.error('Company not found for ID:', companyId);
+        setCompanySectorId(null);
+        return;
+      }
+      const sectorId = selectedCompanyData.sectorid?._id || selectedCompanyData.sectorid;
+      setCompanySectorId(sectorId || null);
+      console.log('Selected Company:', selectedCompanyData);
+      console.log('Company Sector ID:', sectorId);
+    } catch (err) {
+      console.error('Error fetching company sector:', err);
+      setCompanySectorId(null);
     }
   };
 
   const handleCompanyChange = async (companyId) => {
     setSelectedCompany(companyId);
-    setAddedSubAccounts(new Set()); // إعادة تعيين الـ Sub-Accounts المضافة عند تغيير الشركة
-    setSelectedSubAccountToAdd({}); // إعادة تعيين الـ Sub-Accounts المختارة
+    setAddedSubAccounts(new Set());
+    setSelectedSubAccountToAdd({});
+    setPreviousReport(null);
     if (companyId) {
+      await fetchCompanySector(companyId);
       await fetchPreviousReport(companyId);
     } else {
+      setCompanySectorId(null);
       setPreviousReport(null);
     }
   };
@@ -84,19 +112,23 @@ const AddFinancialReportPage = () => {
       if (data.data?.allclasses) {
         data.data.allclasses.forEach((cls, index) => {
           console.log(`previousReport.allclasses[${index}].classid:`, cls.classid);
+          console.log(`previousReport.allclasses[${index}].accounts:`, cls.accounts);
         });
+      } else {
+        console.log('No previous report found for this company.');
       }
       setPreviousReport(data.data || null);
     } catch (err) {
       console.error('Error fetching previous report:', err);
+      console.log('Setting previousReport to null due to error.');
       setPreviousReport(null);
     }
   };
 
   const handleMainClassChange = async (mainClassId) => {
     setSelectedMainClass(mainClassId);
-    setAddedSubAccounts(new Set()); // إعادة تعيين الـ Sub-Accounts المضافة عند تغيير الـ Main Class
-    setSelectedSubAccountToAdd({}); // إعادة تعيين الـ Sub-Accounts المختارة
+    setAddedSubAccounts(new Set());
+    setSelectedSubAccountToAdd({});
     if (!classesData[mainClassId]) {
       await fetchClassData(mainClassId);
     }
@@ -104,9 +136,15 @@ const AddFinancialReportPage = () => {
 
   const fetchClassData = async (mainClassId) => {
     try {
-      const { data } = await axios.get(`https://deepmetrics-be.onrender.com/deepmetrics/api/v1/mainclass/all/${mainClassId}`, {
-        headers: { token: TOKEN },
-      });
+      console.log('Fetching Class Data for mainClassId:', mainClassId);
+      console.log('Selected Company ID:', selectedCompany);
+      const { data } = await axios.get(
+        `https://deepmetrics-be.onrender.com/deepmetrics/api/v1/mainclass/all/${mainClassId}`,
+        {
+          headers: { token: TOKEN },
+        }
+      );
+      console.log('Class Data Response:', data);
       const classStructure = {};
       const initialAmounts = {};
       const ids = {};
@@ -114,7 +152,12 @@ const AddFinancialReportPage = () => {
       data.subclasses.forEach(sub => {
         ids[`subclass_${sub.subclass}`] = sub._id;
         classStructure[sub.subclass] = sub.subsubclasses.reduce((acc, subsub) => {
-          ids[`subsubclass_${sub.subclass}_${subsub.subsubclass}`] = subsub._id;
+          const sectorId = subsub.sectorid?._id || subsub.sectorid;
+          console.log(`SubSubClass: ${subsub.subsubclass}, Sector ID:`, sectorId);
+          ids[`subsubclass_${sub.subclass}_${subsub.subsubclass}`] = {
+            id: subsub._id,
+            sectorid: sectorId,
+          };
           acc[subsub.subsubclass] = subsub.accounts.reduce((acc2, accnt) => {
             acc2[accnt.account] = accnt.subaccounts.reduce((acc3, subacc) => {
               acc3[subacc.subaccount] = {
@@ -142,6 +185,7 @@ const AddFinancialReportPage = () => {
       }));
     } catch (err) {
       console.error('Error fetching class data:', err);
+      console.error('Error Details:', err.response?.data);
     }
   };
 
@@ -159,7 +203,6 @@ const AddFinancialReportPage = () => {
     });
   };
 
-  // دالة لإضافة Sub-Account يدويًا
   const handleAddSubAccount = (subClassKey) => {
     const selectedKey = selectedSubAccountToAdd[subClassKey];
     if (selectedKey) {
@@ -170,12 +213,11 @@ const AddFinancialReportPage = () => {
       });
       setSelectedSubAccountToAdd(prev => ({
         ...prev,
-        [subClassKey]: '', // إعادة تعيين القائمة المنسدلة للـ Sub-Class بعد الإضافة
+        [subClassKey]: '',
       }));
     }
   };
 
-  // دالة لحساب التوتال لكل Sub-Class (Current Report وPrevious Report)
   const calculateSubClassTotal = (subClassItems, prefix, mainClassId) => {
     let currentTotal = 0;
     let previousTotal = 0;
@@ -187,7 +229,6 @@ const AddFinancialReportPage = () => {
         const isLeaf = !Object.keys(value).some(k => typeof value[k] === 'object');
 
         if (isLeaf) {
-          // Current Report Amount
           const currentAmount = amounts[keyPath];
           if (currentAmount !== null && currentAmount !== undefined && currentAmount !== '' && !isNaN(currentAmount)) {
             currentTotal += Number(currentAmount);
@@ -195,7 +236,6 @@ const AddFinancialReportPage = () => {
             allCurrentAmountsFilled = false;
           }
 
-          // Previous Report Amount
           const matchingClass = previousReport?.allclasses?.find(cls => cls.classid?._id === mainClassId);
           const matchingAccount = matchingClass?.accounts?.find(acc =>
             acc.finaldata?.some(fd => {
@@ -220,7 +260,7 @@ const AddFinancialReportPage = () => {
     collectAmounts(subClassItems, prefix);
     return {
       currentTotal: allCurrentAmountsFilled ? currentTotal : 0,
-      previousTotal: previousTotal > 0 ? previousTotal : 0, // Previous Total يظهر حتى لو في قيم ناقصة
+      previousTotal: previousTotal > 0 ? previousTotal : 0,
     };
   };
 
@@ -228,9 +268,8 @@ const AddFinancialReportPage = () => {
     return Object.entries(items).map(([key, value]) => {
       const currentKey = prefix ? `${prefix}.${key}` : `${selectedMainClass}.${key}`;
       const isLeaf = !Object.keys(value).some(k => typeof value[k] === 'object');
-      const isSubClass = prefix === ''; // الـ Sub-Class هو المستوى الأول (مثل "Assets")
+      const isSubClass = prefix === '';
 
-      // جمع الـ Sub-Accounts الغير موجودة في الـ Previous Report لكل Sub-Class
       const missingSubAccounts = [];
 
       const collectMissingSubAccounts = (items, currentPrefix) => {
@@ -253,8 +292,23 @@ const AddFinancialReportPage = () => {
             const previousAmount = matchingFinalData?.amount ?? 0;
             const isAddedManually = addedSubAccounts.has(keyPath);
 
-            if (previousAmount === 0 && !isAddedManually) {
+            const subsubclassKey = keyPath.split('.').slice(0, 3).join('.');
+            const subsubclassIdKey = `subsubclass_${subsubclassKey.split('.')[1]}_${subsubclassKey.split('.')[2]}`;
+            const subsubclassSectorId = classesData[selectedMainClass]?.ids[subsubclassIdKey]?.sectorid;
+
+            console.log(`Sub-Account: ${subKey}, KeyPath: ${keyPath}, SubSubClass Sector ID: ${subsubclassSectorId}, Company Sector ID: ${companySectorId}`);
+            console.log(`Previous Amount: ${previousAmount}, Is Added Manually: ${isAddedManually}`);
+            const subAccountSectorId = subValue.sectorid; // Use the sectorid of the Sub-Account
+
+            console.log(`Sub-Account: ${subKey}, KeyPath: ${keyPath}, Sub-Account Sector ID: ${subAccountSectorId}, Company Sector ID: ${companySectorId}`);
+            if (
+              previousAmount === 0 &&
+              !isAddedManually & subAccountSectorId === companySectorId
+            ) {
+              console.log(`Adding Sub-Account to missingSubAccounts: ${subKey}`);
               missingSubAccounts.push({ key: keyPath, name: subKey });
+            } else {
+              console.log(`Skipping Sub-Account: ${subKey} (Previous amount exists or already added)`);
             }
           } else {
             collectMissingSubAccounts(subValue, keyPath);
@@ -266,12 +320,12 @@ const AddFinancialReportPage = () => {
         collectMissingSubAccounts(value, currentKey);
       }
 
-      // إذا كان Sub-Class، نحسب التوتال الخاص به
+      console.log(`Missing Sub-Accounts for ${currentKey}:`, missingSubAccounts);
+
       const { currentTotal, previousTotal } = isSubClass
         ? calculateSubClassTotal(value, currentKey, selectedMainClass)
         : { currentTotal: 0, previousTotal: 0 };
 
-      // حساب قيمة Previous Report للـ Sub-Account
       let previousAmount = 0;
       if (isLeaf) {
         const matchingClass = previousReport?.allclasses?.find(cls => cls.classid?._id === selectedMainClass);
@@ -288,8 +342,42 @@ const AddFinancialReportPage = () => {
         previousAmount = matchingFinalData?.amount ?? 0;
       }
 
-      // تحديد إذا كان الـ Sub-Account مضاف يدويًا
       const isAddedManually = addedSubAccounts.has(currentKey);
+
+      // Check if the current key is redundant (e.g., "Inventory" -> "Inventory" -> "Inventory")
+      const shouldSkipRendering = () => {
+        if (isLeaf) return false; // Always render the leaf (Sub-Account with Input Field)
+
+        const childKeys = Object.keys(value);
+        if (childKeys.length === 1) {
+          const childKey = childKeys[0];
+          const childValue = value[childKey];
+          const isChildLeaf = !Object.keys(childValue).some(k => typeof childValue[k] === 'object');
+
+          // If the child is a leaf and has the same name as the current key, skip rendering this level
+          if (isChildLeaf && childKey === key) {
+            return true;
+          }
+
+          // If the child is not a leaf, check the next level
+          const grandChildKeys = Object.keys(childValue);
+          if (grandChildKeys.length === 1) {
+            const grandChildKey = grandChildKeys[0];
+            const isGrandChildLeaf = !Object.keys(childValue[grandChildKey]).some(k => typeof childValue[grandChildKey][k] === 'object');
+            if (isGrandChildLeaf && grandChildKey === childKey && childKey === key) {
+              return true;
+            }
+          }
+        }
+        return false;
+      };
+
+      const skipRendering = shouldSkipRendering();
+
+      if (skipRendering) {
+        // Skip rendering this level and render the child directly
+        return renderTree(value, prefix);
+      }
 
       return (
         <div key={currentKey} className={isLeaf ? 'sub-account' : 'class-item'}>
@@ -301,12 +389,11 @@ const AddFinancialReportPage = () => {
               {renderTree(value, currentKey)}
             </div>
           )}
-          {/* عرض الـ Sub-Account إذا كان ليه بيانات في الـ Previous Report أو تمت إضافته يدويًا */}
-          {isLeaf && (previousAmount !== 0 || isAddedManually) && (
+          {isLeaf && (
             <div className="table-row sub-account-row">
-              <span className="table-cell sub-account-name">{key}</span>
+              <span className="table-cell sub-account-name">Amount</span>
               <span className="table-cell previous-report" data-label="Previous Report:">
-                {previousAmount}
+                {previousAmount !== 0 ? previousAmount : '-'}
               </span>
               <span className="table-cell current-report" data-label="Current Report:">
                 <input
@@ -316,12 +403,11 @@ const AddFinancialReportPage = () => {
                     console.log(`[renderTree] Changing key: ${currentKey}, Value: ${e.target.value}`);
                     handleAmountChange(currentKey, e.target.value);
                   }}
-                  placeholder="Enter amount"
+                  // placeholder="Enter amount"
                 />
               </span>
             </div>
           )}
-          {/* إضافة Row التوتال لكل Sub-Class (Current Report وPrevious Report) */}
           {isSubClass && (currentTotal > 0 || previousTotal > 0) && (
             <div className="table-row total-row">
               <span className="table-cell sub-account-name">
@@ -331,7 +417,6 @@ const AddFinancialReportPage = () => {
               <span className="table-cell current-report" data-label="Current Report:">{currentTotal > 0 ? currentTotal : '-'}</span>
             </div>
           )}
-          {/* إضافة Dropdown List لإضافة Sub-Accounts جديدة في مستوى الـ Sub-Class */}
           {isSubClass && missingSubAccounts.length > 0 && (
             <div className="add-sub-account-container">
               <CFormSelect
@@ -388,7 +473,7 @@ const AddFinancialReportPage = () => {
             classData.subclassid = classesData[selectedMainClass].ids[`subclass_${subClass}`];
           }
           if (!classData.subsubclassid) {
-            classData.subsubclassid = classesData[selectedMainClass].ids[`subsubclass_${subClass}_${subSubClass}`];
+            classData.subsubclassid = classesData[selectedMainClass].ids[`subsubclass_${subClass}_${subSubClass}`].id;
           }
         } else {
           console.log(`[processSubaccounts] Skipping key: ${key} (invalid or empty amount)`);

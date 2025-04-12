@@ -28,20 +28,46 @@ import axios from 'axios';
 const MainAccountDashboard = () => {
   const [mainAccounts, setMainAccounts] = useState([]);
   const [subSubClasses, setSubSubClasses] = useState([]);
+  const [sectors, setSectors] = useState([]); // State للسكتور
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [success, setSuccess] = useState(null);
   const [visibleAddMain, setVisibleAddMain] = useState(false);
   const [visibleEditMain, setVisibleEditMain] = useState(false);
-  const [formData, setFormData] = useState({ account: '', subsubclassid: '' }); // استبدال subsubclass بـ account و subclassid بـ subsubclassid
+  const [formData, setFormData] = useState({ account: '', subsubclassid: '', sectorid: '' });
   const [editId, setEditId] = useState(null);
 
   const TOKEN = 'arij_eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6IjY3ZWRhMDViZDMwMDA5YzMzYzVmMjA1NSIsInJvbGUiOiJtYW5hZ2VyIiwiaWF0IjoxNzQzNjI3NjQxfQ.M5naIsuddc3UZ7Oe7ZTfABdZVYQyw_i-80MU4daCoZE';
 
   useEffect(() => {
-    fetchSubSubClasses();
-    fetchMainAccounts();
+    const fetchData = async () => {
+      await fetchSectors();
+      await fetchSubSubClasses();
+      await fetchMainAccounts();
+    };
+    fetchData();
   }, []);
+
+  const fetchSectors = async () => {
+    try {
+      const response = await axios.get('https://deepmetrics-be.onrender.com/deepmetrics/api/v1/sector', {
+        headers: { token: TOKEN },
+      });
+      const sectorsData = response.data.allsectors;
+      console.log('Sectors Data:', sectorsData);
+      if (Array.isArray(sectorsData)) {
+        setSectors(sectorsData.map(item => ({
+          _id: item._id,
+          name: item.Sector,
+        })));
+      } else {
+        setSectors([]);
+      }
+    } catch (err) {
+      console.error('Error fetching Sectors:', err.response ? err.response.data : err.message);
+      setError('Failed to load Sectors');
+    }
+  };
 
   const fetchSubSubClasses = async () => {
     try {
@@ -50,10 +76,14 @@ const MainAccountDashboard = () => {
       });
       const subSubClassesData = response.data.data || response.data;
       if (Array.isArray(subSubClassesData)) {
-        setSubSubClasses(subSubClassesData.map(item => ({
-          _id: item._id,
-          name: item.subsubclass,
-        })));
+        setSubSubClasses(
+          subSubClassesData.map(item => ({
+            _id: item._id,
+            name: item.subsubclass,
+            sectorid: item.sectorid?._id || item.sectorid,
+            sectorName: item.sectorid?.Sector || 'Unknown',
+          }))
+        );
       } else {
         setSubSubClasses([]);
       }
@@ -75,8 +105,11 @@ const MainAccountDashboard = () => {
       if (Array.isArray(mainAccountsData)) {
         const formattedMainAccounts = mainAccountsData.map((item, index) => ({
           _id: item._id || `item_${index}`,
-          account: item.account, // استبدال subsubclass بـ account
-          subsubclassid: item.subsubclassid, // استبدال subclassid بـ subsubclassid
+          account: item.account,
+          subsubclassid: item.subsubclassid?._id || item.subsubclassid,
+          subsubclassName: item.subsubclassid?.subsubclass || 'Unknown',
+          sectorid: item.sectorid?._id || item.sectorid,
+          sectorName: item.sectorid?.Sector || item.subsubclassid?.sectorid?.Sector || 'Unknown',
         }));
         setMainAccounts(formattedMainAccounts);
       } else {
@@ -93,13 +126,22 @@ const MainAccountDashboard = () => {
 
   const handleInputChange = (e) => {
     const { name, value } = e.target;
-    setFormData({ ...formData, [name]: value });
+    if (name === 'subsubclassid') {
+      const selectedSubSubClass = subSubClasses.find(s => s._id === value);
+      setFormData({
+        ...formData,
+        subsubclassid: value,
+        sectorid: selectedSubSubClass?.sectorid || '', // تحديث الـ sectorid تلقائيًا
+      });
+    } else {
+      setFormData({ ...formData, [name]: value });
+    }
     console.log('Input Change:', { name, value });
   };
 
   const handleAddMainOpen = () => {
     console.log('Opening Add Main Account Modal');
-    setFormData({ account: '', subsubclassid: '' });
+    setFormData({ account: '', subsubclassid: '', sectorid: '' });
     setVisibleAddMain(true);
   };
 
@@ -108,7 +150,11 @@ const MainAccountDashboard = () => {
     if (mainAccount) {
       console.log('Editing Main Account:', mainAccount);
       setEditId(mainAccountId);
-      setFormData({ account: mainAccount.account, subsubclassid: mainAccount.subsubclassid });
+      setFormData({ 
+        account: mainAccount.account, 
+        subsubclassid: mainAccount.subsubclassid,
+        sectorid: mainAccount.sectorid || '',
+      });
       setVisibleEditMain(true);
     } else {
       console.error('Main Account not found for ID:', mainAccountId);
@@ -119,12 +165,16 @@ const MainAccountDashboard = () => {
   const handleCreateMain = async (e) => {
     e.preventDefault();
     console.log('Form Data before validation:', formData);
-    if (!formData.account.trim() || !formData.subsubclassid) {
-      setError('Main Account name and Sub Sub Class are required');
+    if (!formData.account.trim() || !formData.subsubclassid || !formData.sectorid) {
+      setError('Main Account name, Sub Sub Class, and Sector are required');
       return;
     }
     try {
-      const payload = { account: formData.account.trim(), subsubclassid: formData.subsubclassid };
+      const payload = { 
+        account: formData.account.trim(), 
+        subsubclassid: formData.subsubclassid,
+        sectorid: formData.sectorid,
+      };
       console.log('Creating Main Account with Payload:', payload);
       const response = await axios.post(
         'https://deepmetrics-be.onrender.com/deepmetrics/api/v1/mainclass/account',
@@ -135,16 +185,21 @@ const MainAccountDashboard = () => {
       );
       console.log('Main Account Created - Full Response:', response.data);
 
+      const selectedSubSubClass = subSubClasses.find(s => s._id === formData.subsubclassid);
+      const selectedSector = sectors.find(s => s._id === formData.sectorid);
       const newMainAccount = {
         _id: response.data.data?._id || response.data._id,
         account: response.data.data?.account || formData.account.trim(),
         subsubclassid: response.data.data?.subsubclassid || formData.subsubclassid,
+        subsubclassName: selectedSubSubClass?.name || 'Unknown',
+        sectorid: formData.sectorid,
+        sectorName: selectedSector?.name || 'Unknown',
       };
 
       setMainAccounts([...mainAccounts, newMainAccount]);
       setSuccess('Main Account added successfully!');
       setVisibleAddMain(false);
-      setFormData({ account: '', subsubclassid: '' });
+      setFormData({ account: '', subsubclassid: '', sectorid: '' });
       setTimeout(() => setSuccess(null), 3000);
     } catch (err) {
       console.error('Error adding Main Account:', err.response ? err.response.data : err.message);
@@ -152,6 +207,8 @@ const MainAccountDashboard = () => {
         setError('A Main Account with this name already exists');
       } else if (err.response?.data?.message === 'Subsubclass not found') {
         setError('Selected Sub Sub Class not found');
+      } else if (err.response?.data?.message === 'Sector not found') {
+        setError('Selected Sector not found');
       } else if (err.response?.data?.message === 'Validation Error') {
         setError('Invalid data sent. Check the fields and try again.');
       } else {
@@ -167,12 +224,16 @@ const MainAccountDashboard = () => {
       setError('No Main Account selected for update');
       return;
     }
-    if (!formData.account.trim() || !formData.subsubclassid) {
-      setError('Main Account name and Sub Sub Class are required');
+    if (!formData.account.trim() || !formData.subsubclassid || !formData.sectorid) {
+      setError('Main Account name, Sub Sub Class, and Sector are required');
       return;
     }
     try {
-      const payload = { account: formData.account.trim(), subsubclassid: formData.subsubclassid };
+      const payload = { 
+        account: formData.account.trim(), 
+        subsubclassid: formData.subsubclassid,
+        sectorid: formData.sectorid,
+      };
       console.log('Updating Main Account with Payload:', payload, 'ID:', editId);
       const response = await axios.put(
         `https://deepmetrics-be.onrender.com/deepmetrics/api/v1/mainclass/account/${editId}`,
@@ -183,21 +244,33 @@ const MainAccountDashboard = () => {
       );
       console.log('Main Account Updated:', response.data);
 
+      const selectedSubSubClass = subSubClasses.find(s => s._id === formData.subsubclassid);
+      const selectedSector = sectors.find(s => s._id === formData.sectorid);
       const updatedMainAccount = response.data.data || {
         _id: editId,
         account: formData.account.trim(),
         subsubclassid: formData.subsubclassid,
+        subsubclassName: selectedSubSubClass?.name || 'Unknown',
+        sectorid: formData.sectorid,
+        sectorName: selectedSector?.name || 'Unknown',
       };
       setMainAccounts(
         mainAccounts.map((m) =>
           m._id === editId
-            ? { ...m, account: updatedMainAccount.account, subsubclassid: updatedMainAccount.subsubclassid }
+            ? { 
+                ...m, 
+                account: updatedMainAccount.account, 
+                subsubclassid: updatedMainAccount.subsubclassid,
+                subsubclassName: updatedMainAccount.subsubclassName,
+                sectorid: updatedMainAccount.sectorid,
+                sectorName: updatedMainAccount.sectorName,
+              }
             : m
         )
       );
       setSuccess('Main Account updated successfully!');
       setVisibleEditMain(false);
-      setFormData({ account: '', subsubclassid: '' });
+      setFormData({ account: '', subsubclassid: '', sectorid: '' });
       setEditId(null);
       setTimeout(() => setSuccess(null), 3000);
     } catch (err) {
@@ -206,6 +279,8 @@ const MainAccountDashboard = () => {
         setError('A Main Account with this name already exists');
       } else if (err.response?.data?.message === 'Subsubclass not found') {
         setError('Selected Sub Sub Class not found');
+      } else if (err.response?.data?.message === 'Sector not found') {
+        setError('Selected Sector not found');
       } else if (err.response?.data?.message === 'Main Account not found') {
         setError('Main Account not found');
       } else {
@@ -237,7 +312,6 @@ const MainAccountDashboard = () => {
         <CCol xs={12}>
           <CCard className="mb-4">
             <CCardHeader>
-              <strong>Main Accounts Dashboard</strong>
               <CButton color="primary" className="float-end" onClick={handleAddMainOpen}>
                 Add Main Account
               </CButton>
@@ -255,7 +329,6 @@ const MainAccountDashboard = () => {
         <CCol xs={12}>
           <CCard className="mb-4">
             <CCardHeader>
-              <strong>Main Accounts Dashboard</strong>
               <CButton color="primary" className="float-end" onClick={handleAddMainOpen}>
                 Add Main Account
               </CButton>
@@ -271,11 +344,9 @@ const MainAccountDashboard = () => {
 
   return (
     <CRow>
-      <
-      CCol xs={12}>
+      <CCol xs={12}>
         <CCard className="mb-4">
           <CCardHeader>
-            <strong>Main Accounts Dashboard</strong>
             <CButton color="primary" className="float-end" onClick={handleAddMainOpen}>
               <CIcon icon={cilPlus} /> Add Main Account
             </CButton>
@@ -286,8 +357,10 @@ const MainAccountDashboard = () => {
               <CTableHead>
                 <CTableRow>
                   <CTableHeaderCell scope="col">#</CTableHeaderCell>
-                  <CTableHeaderCell scope="col">Main Account Name</CTableHeaderCell>
-                  <CTableHeaderCell scope="col">Actions</CTableHeaderCell>
+                  <CTableHeaderCell scope="col">Main Account</CTableHeaderCell>
+                  <CTableHeaderCell scope="col">Sub Sub Class</CTableHeaderCell>
+                  <CTableHeaderCell scope="col">Sector</CTableHeaderCell>
+                  <CTableHeaderCell scope="col">Action</CTableHeaderCell>
                 </CTableRow>
               </CTableHead>
               <CTableBody>
@@ -296,6 +369,8 @@ const MainAccountDashboard = () => {
                     <CTableRow key={mainAccount._id}>
                       <CTableHeaderCell scope="row">{index + 1}</CTableHeaderCell>
                       <CTableDataCell>{mainAccount.account}</CTableDataCell>
+                      <CTableDataCell>{mainAccount.subsubclassName}</CTableDataCell>
+                      <CTableDataCell>{mainAccount.sectorName}</CTableDataCell>
                       <CTableHeaderCell>
                         <CButton
                           color="warning"
@@ -317,7 +392,7 @@ const MainAccountDashboard = () => {
                   ))
                 ) : (
                   <CTableRow>
-                    <CTableDataCell colSpan="3">No Main Accounts available.</CTableDataCell>
+                    <CTableDataCell colSpan="5">No Main Accounts available.</CTableDataCell>
                   </CTableRow>
                 )}
               </CTableBody>
@@ -348,6 +423,20 @@ const MainAccountDashboard = () => {
                     {subSubClasses.map((subSubClass) => (
                       <option key={subSubClass._id} value={subSubClass._id}>
                         {subSubClass.name}
+                      </option>
+                    ))}
+                  </CFormSelect>
+                  <CFormSelect
+                    name="sectorid"
+                    label="Sector"
+                    value={formData.sectorid}
+                    onChange={handleInputChange}
+                    required
+                  >
+                    <option value="">Select Sector</option>
+                    {sectors.map((sector) => (
+                      <option key={sector._id} value={sector._id}>
+                        {sector.name}
                       </option>
                     ))}
                   </CFormSelect>
@@ -388,6 +477,20 @@ const MainAccountDashboard = () => {
                     {subSubClasses.map((subSubClass) => (
                       <option key={subSubClass._id} value={subSubClass._id}>
                         {subSubClass.name}
+                      </option>
+                    ))}
+                  </CFormSelect>
+                  <CFormSelect
+                    name="sectorid"
+                    label="Sector"
+                    value={formData.sectorid}
+                    onChange={handleInputChange}
+                    required
+                  >
+                    <option value="">Select Sector</option>
+                    {sectors.map((sector) => (
+                      <option key={sector._id} value={sector._id}>
+                        {sector.name}
                       </option>
                     ))}
                   </CFormSelect>

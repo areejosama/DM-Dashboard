@@ -33,7 +33,7 @@ const SubClassDashboard = () => {
   const [success, setSuccess] = useState(null);
   const [visibleAddSub, setVisibleAddSub] = useState(false);
   const [visibleEditSub, setVisibleEditSub] = useState(false);
-  const [formData, setFormData] = useState({ name: '', classid: '' });
+  const [formData, setFormData] = useState({ name: '', classid: '' }); 
   const [editId, setEditId] = useState(null);
 
   const TOKEN = 'arij_eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6IjY3ZWRhMDViZDMwMDA5YzMzYzVmMjA1NSIsInJvbGUiOiJtYW5hZ2VyIiwiaWF0IjoxNzQzNjI3NjQxfQ.M5naIsuddc3UZ7Oe7ZTfABdZVYQyw_i-80MU4daCoZE';
@@ -99,7 +99,7 @@ const SubClassDashboard = () => {
 
   const handleAddSubOpen = () => {
     console.log('Opening Add Sub Class Modal');
-    setFormData({ name: '', classid: '' });
+    setFormData({ name: '', classid: ''});
     setVisibleAddSub(true);
   };
 
@@ -107,8 +107,8 @@ const SubClassDashboard = () => {
     const subClass = subClasses.find((s) => s._id === subClassId);
     if (subClass) {
       console.log('Editing Sub Class:', subClass);
-      setEditId(subClassId);
-      setFormData({ name: subClass.name, classid: subClass.classid });
+      setEditId(subClassId); // الـ ID بيتخزن هنا
+      setFormData({ name: subClass.name, classid: subClass.classid});
       setVisibleEditSub(true);
     } else {
       console.error('Sub Class not found for ID:', subClassId);
@@ -118,12 +118,15 @@ const SubClassDashboard = () => {
 
   const handleCreateSub = async (e) => {
     e.preventDefault();
-    if (!formData.name.trim() || !formData.classid) {
-      setError('Sub Class name and Main Class are required');
+    if (!formData.name.trim() || !formData.classid ) {
+      setError('Sub Class name, Main Class');
       return;
     }
     try {
-      const payload = { subclass: formData.name.trim(), classid: formData.classid };
+      const payload = { 
+        subclass: formData.name.trim(), 
+        classid: formData.classid,
+      };
       console.log('Creating Sub Class with Payload:', payload);
       const response = await axios.post(
         'https://deepmetrics-be.onrender.com/deepmetrics/api/v1/mainclass/subclass',
@@ -135,7 +138,7 @@ const SubClassDashboard = () => {
       console.log('Sub Class Created - Full Response:', response.data);
 
       const newSubClass = {
-        _id: response.data._id || Date.now().toString(), // استخدام مؤقت إذا لم يرجع _id
+        _id: response.data._id || Date.now().toString(),
         name: formData.name.trim(),
         classid: formData.classid,
       };
@@ -143,7 +146,7 @@ const SubClassDashboard = () => {
       setSubClasses([...subClasses, newSubClass]);
       setSuccess('Sub Class added successfully!');
       setVisibleAddSub(false);
-      setFormData({ name: '', classid: '' });
+      setFormData({ name: '', classid: ''});
       setTimeout(() => setSuccess(null), 3000);
     } catch (err) {
       console.error('Error adding Sub Class:', err.response ? err.response.data : err.message);
@@ -165,12 +168,15 @@ const SubClassDashboard = () => {
       setError('No Sub Class selected for update');
       return;
     }
-    if (!formData.name.trim() || !formData.classid) {
-      setError('Sub Class name and Main Class are required');
+    if (!formData.name.trim() || !formData.classid ) {
+      setError('Sub Class name, Main Class');
       return;
     }
     try {
-      const payload = { subclass: formData.name.trim(), classid: formData.classid };
+      const payload = { 
+        subclass: formData.name.trim(), 
+        classid: formData.classid,
+      };
       console.log('Updating Sub Class with Payload:', payload, 'ID:', editId);
       const response = await axios.put(
         `https://deepmetrics-be.onrender.com/deepmetrics/api/v1/mainclass/subclass/${editId}`,
@@ -183,13 +189,17 @@ const SubClassDashboard = () => {
       setSubClasses(
         subClasses.map((s) =>
           s._id === editId
-            ? { ...s, name: formData.name.trim(), classid: formData.classid }
+            ? { 
+                ...s, 
+                name: formData.name.trim(), 
+                classid: formData.classid,
+              }
             : s
         )
       );
       setSuccess('Sub Class updated successfully!');
       setVisibleEditSub(false);
-      setFormData({ name: '', classid: '' });
+      setFormData({ name: '', classid: ''});
       setEditId(null);
       setTimeout(() => setSuccess(null), 3000);
     } catch (err) {
@@ -198,28 +208,28 @@ const SubClassDashboard = () => {
         setError('A Sub Class with this name already exists');
       } else if (err.response?.data?.message === 'Class not found') {
         setError('Selected Main Class not found');
-      } else {
+      }else {
         setError('Failed to update Sub Class, try again later');
       }
     }
   };
 
-  const handleDeleteSub = async (subClassId) => {
+const handleDeleteSub = async (subClassId) => {
     if (window.confirm('Are you sure you want to delete this Sub Class?')) {
-        try {
-            console.log('Deleting Sub Class with ID:', subClassId);
-            await axios.delete(`https://deepmetrics-be.onrender.com/deepmetrics/api/v1/mainclass/subclass/${subClassId}`, {
-                headers: { token: TOKEN },
-            });
-            setSubClasses(subClasses.filter((s) => s._id !== subClassId));
-            setSuccess('Sub Class deleted successfully!');
-            setTimeout(() => setSuccess(null), 3000);
-        } catch (err) {
-            console.error('Error deleting Sub Class:', err.response ? err.response.data : err.message);
-            setError('Failed to delete Sub Class, try again later');
-        }
+      try {
+        console.log('Deleting Sub Class with ID:', subClassId);
+        await axios.delete(`https://deepmetrics-be.onrender.com/deepmetrics/api/v1/mainclass/subclass/${subClassId}`, {
+          headers: { token: TOKEN },
+        });
+        setSubClasses(subClasses.filter((s) => s._id !== subClassId));
+        setSuccess('Sub Class deleted successfully!');
+        setTimeout(() => setSuccess(null), 3000);
+      } catch (err) {
+        console.error('Error deleting Sub Class:', err.response ? err.response.data : err.message);
+        setError('Failed to delete Sub Class, try again later');
+      }
     }
-};
+  };
 
   if (loading) {
     return (
@@ -227,7 +237,7 @@ const SubClassDashboard = () => {
         <CCol xs={12}>
           <CCard className="mb-4">
             <CCardHeader>
-              <strong>Sub Classes Dashboard</strong>
+              <strong></strong>
               <CButton color="primary" className="float-end" onClick={handleAddSubOpen}>
                 Add Sub Class
               </CButton>
@@ -245,7 +255,6 @@ const SubClassDashboard = () => {
         <CCol xs={12}>
           <CCard className="mb-4">
             <CCardHeader>
-              <strong>Sub Classes Dashboard</strong>
               <CButton color="primary" className="float-end" onClick={handleAddSubOpen}>
                 Add Sub Class
               </CButton>
@@ -264,7 +273,6 @@ const SubClassDashboard = () => {
       <CCol xs={12}>
         <CCard className="mb-4">
           <CCardHeader>
-            <strong>Sub Classes Dashboard</strong>
             <CButton color="primary" className="float-end" onClick={handleAddSubOpen}>
               <CIcon icon={cilPlus} /> Add Sub Class
             </CButton>
@@ -275,8 +283,8 @@ const SubClassDashboard = () => {
               <CTableHead>
                 <CTableRow>
                   <CTableHeaderCell scope="col">#</CTableHeaderCell>
-                  <CTableHeaderCell scope="col">Sub Class Name</CTableHeaderCell>
-                  <CTableHeaderCell scope="col">Actions</CTableHeaderCell>
+                  <CTableHeaderCell scope="col">Sub Class</CTableHeaderCell>
+                  <CTableHeaderCell scope="col">Action</CTableHeaderCell>
                 </CTableRow>
               </CTableHead>
               <CTableBody>
@@ -302,7 +310,7 @@ const SubClassDashboard = () => {
                   ))
                 ) : (
                   <CTableRow>
-                    <CTableDataCell colSpan="3">No Sub Classes available.</CTableDataCell>
+                    <CTableDataCell colSpan="4">No Sub Classes available.</CTableDataCell>
                   </CTableRow>
                 )}
               </CTableBody>

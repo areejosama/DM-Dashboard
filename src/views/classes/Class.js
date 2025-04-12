@@ -213,7 +213,6 @@ const Dashboard = () => {
         <CCol xs={12}>
           <CCard className="mb-4">
             <CCardHeader>
-              <strong>Main Classes Dashboard</strong>
               <CButton color="primary" className="float-end" onClick={handleAddMainOpen}>
                 Add Main Class
               </CButton>
@@ -231,7 +230,6 @@ const Dashboard = () => {
         <CCol xs={12}>
           <CCard className="mb-4">
             <CCardHeader>
-              <strong>Main Classes Dashboard</strong>
               <CButton color="primary" className="float-end" onClick={handleAddMainOpen}>
                 Add Main Class
               </CButton>
@@ -250,7 +248,6 @@ const Dashboard = () => {
       <CCol xs={12}>
         <CCard className="mb-4">
           <CCardHeader>
-            <strong>Main Classes Dashboard</strong>
             <CButton color="primary" className="float-end" onClick={handleAddMainOpen}>
               <CIcon icon={cilPlus} /> Add Main Class
             </CButton>
@@ -261,8 +258,8 @@ const Dashboard = () => {
               <CTableHead>
                 <CTableRow>
                   <CTableHeaderCell scope="col">#</CTableHeaderCell>
-                  <CTableHeaderCell scope="col">Main Class Name</CTableHeaderCell>
-                  <CTableHeaderCell scope="col">Actions</CTableHeaderCell>
+                  <CTableHeaderCell scope="col">Main Class</CTableHeaderCell>
+                  <CTableHeaderCell scope="col">Action</CTableHeaderCell>
                 </CTableRow>
               </CTableHead>
               <CTableBody>

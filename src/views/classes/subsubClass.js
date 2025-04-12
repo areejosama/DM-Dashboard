@@ -28,17 +28,19 @@ import axios from 'axios';
 const SubSubClassDashboard = () => {
   const [subSubClasses, setSubSubClasses] = useState([]);
   const [subClasses, setSubClasses] = useState([]);
+  const [sectors, setSectors] = useState([]); // State جديد لتخزين الـ Sectors
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [success, setSuccess] = useState(null);
   const [visibleAddSubSub, setVisibleAddSubSub] = useState(false);
   const [visibleEditSubSub, setVisibleEditSubSub] = useState(false);
-  const [formData, setFormData] = useState({ subsubclass: '', subclassid: '' }); // تغيير name إلى subsubclass
+  const [formData, setFormData] = useState({ subsubclass: '', subclassid: '', sectorid: '' });
   const [editId, setEditId] = useState(null);
 
   const TOKEN = 'arij_eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6IjY3ZWRhMDViZDMwMDA5YzMzYzVmMjA1NSIsInJvbGUiOiJtYW5hZ2VyIiwiaWF0IjoxNzQzNjI3NjQxfQ.M5naIsuddc3UZ7Oe7ZTfABdZVYQyw_i-80MU4daCoZE';
 
   useEffect(() => {
+    fetchSectors();
     fetchSubClasses();
     fetchSubSubClasses();
   }, []);
@@ -63,6 +65,27 @@ const SubSubClassDashboard = () => {
     }
   };
 
+  const fetchSectors = async () => {
+    try {
+      const response = await axios.get('https://deepmetrics-be.onrender.com/deepmetrics/api/v1/sector', {
+        headers: { token: TOKEN },
+      });
+      const sectorsData = response.data.allsectors;
+      console.log('Sectors Data:', sectorsData);
+      if (Array.isArray(sectorsData)) {
+        setSectors(sectorsData.map(item => ({
+          _id: item._id,
+          name: item.Sector,
+        })));
+      } else {
+        setSectors([]);
+      }
+    } catch (err) {
+      console.error('Error fetching Sectors:', err.response ? err.response.data : err.message);
+      setError('Failed to load Sectors');
+    }
+  };
+
   const fetchSubSubClasses = async () => {
     try {
       setLoading(true);
@@ -75,8 +98,10 @@ const SubSubClassDashboard = () => {
       if (Array.isArray(subSubClassesData)) {
         const formattedSubSubClasses = subSubClassesData.map((item, index) => ({
           _id: item._id || `item_${index}`,
-          subsubclass: item.subsubclass, // استخدام subsubclass بدلاً من name
-          subclassid: item.subclassid,
+          subsubclass: item.subsubclass,
+          subclassid: item.subclassid?._id || item.subclassid,
+          sectorid: item.sectorid?._id || item.sectorid,
+          sectorName: item.sectorid?.Sector || 'Unknown', // الاعتماد على الـ Sector من الـ Response فقط
         }));
         setSubSubClasses(formattedSubSubClasses);
       } else {
@@ -99,7 +124,7 @@ const SubSubClassDashboard = () => {
 
   const handleAddSubSubOpen = () => {
     console.log('Opening Add Sub Sub Class Modal');
-    setFormData({ subsubclass: '', subclassid: '' });
+    setFormData({ subsubclass: '', subclassid: '', sectorid: '' });
     setVisibleAddSubSub(true);
   };
 
@@ -108,7 +133,11 @@ const SubSubClassDashboard = () => {
     if (subSubClass) {
       console.log('Editing Sub Sub Class:', subSubClass);
       setEditId(subSubClassId);
-      setFormData({ subsubclass: subSubClass.subsubclass, subclassid: subSubClass.subclassid }); // تغيير name إلى subsubclass
+      setFormData({ 
+        subsubclass: subSubClass.subsubclass, 
+        subclassid: subSubClass.subclassid, 
+        sectorid: subSubClass.sectorid || '' 
+      });
       setVisibleEditSubSub(true);
     } else {
       console.error('Sub Sub Class not found for ID:', subSubClassId);
@@ -119,12 +148,16 @@ const SubSubClassDashboard = () => {
   const handleCreateSubSub = async (e) => {
     e.preventDefault();
     console.log('Form Data before validation:', formData);
-    if (!formData.subsubclass.trim() || !formData.subclassid) {
-      setError('Sub Sub Class name and Sub Class are required');
+    if (!formData.subsubclass.trim() || !formData.subclassid || !formData.sectorid) {
+      setError('Sub Sub Class name, Sub Class, and Sector are required');
       return;
     }
     try {
-      const payload = { subsubclass: formData.subsubclass.trim(), subclassid: formData.subclassid };
+      const payload = { 
+        subsubclass: formData.subsubclass.trim(), 
+        subclassid: formData.subclassid,
+        sectorid: formData.sectorid
+      };
       console.log('Creating Sub Sub Class with Payload:', payload);
       const response = await axios.post(
         'https://deepmetrics-be.onrender.com/deepmetrics/api/v1/mainclass/subsubclass',
@@ -139,12 +172,14 @@ const SubSubClassDashboard = () => {
         _id: response.data.data?._id || response.data._id,
         subsubclass: response.data.data?.subsubclass || formData.subsubclass.trim(),
         subclassid: response.data.data?.subclassid || formData.subclassid,
+        sectorid: formData.sectorid,
+        sectorName: sectors.find(s => s._id === formData.sectorid)?.name || 'Unknown',
       };
 
       setSubSubClasses([...subSubClasses, newSubSubClass]);
       setSuccess('Sub Sub Class added successfully!');
       setVisibleAddSubSub(false);
-      setFormData({ subsubclass: '', subclassid: '' });
+      setFormData({ subsubclass: '', subclassid: '', sectorid: '' });
       setTimeout(() => setSuccess(null), 3000);
     } catch (err) {
       console.error('Error adding Sub Sub Class:', err.response ? err.response.data : err.message);
@@ -152,6 +187,8 @@ const SubSubClassDashboard = () => {
         setError('A Sub Sub Class with this name already exists');
       } else if (err.response?.data?.message === 'Subclass not found') {
         setError('Selected Sub Class not found');
+      } else if (err.response?.data?.message === 'Sector not found') {
+        setError('Selected Sector not found');
       } else if (err.response?.data?.message === 'Validation Error') {
         setError('Invalid data sent. Check the fields and try again.');
       } else {
@@ -167,12 +204,16 @@ const SubSubClassDashboard = () => {
       setError('No Sub Sub Class selected for update');
       return;
     }
-    if (!formData.subsubclass.trim() || !formData.subclassid) {
-      setError('Sub Sub Class name and Sub Class are required');
+    if (!formData.subsubclass.trim() || !formData.subclassid || !formData.sectorid) {
+      setError('Sub Sub Class name, Sub Class, and Sector are required');
       return;
     }
     try {
-      const payload = { subsubclass: formData.subsubclass.trim(), subclassid: formData.subclassid };
+      const payload = { 
+        subsubclass: formData.subsubclass.trim(), 
+        subclassid: formData.subclassid,
+        sectorid: formData.sectorid
+      };
       console.log('Updating Sub Sub Class with Payload:', payload, 'ID:', editId);
       const response = await axios.put(
         `https://deepmetrics-be.onrender.com/deepmetrics/api/v1/mainclass/sub2class/${editId}`,
@@ -187,17 +228,25 @@ const SubSubClassDashboard = () => {
         _id: editId,
         subsubclass: formData.subsubclass.trim(),
         subclassid: formData.subclassid,
+        sectorid: formData.sectorid,
+        sectorName: sectors.find(s => s._id === formData.sectorid)?.name || 'Unknown',
       };
       setSubSubClasses(
         subSubClasses.map((s) =>
           s._id === editId
-            ? { ...s, subsubclass: updatedSubSubClass.subsubclass, subclassid: updatedSubSubClass.subclassid }
+            ? { 
+                ...s, 
+                subsubclass: updatedSubSubClass.subsubclass, 
+                subclassid: updatedSubSubClass.subclassid,
+                sectorid: updatedSubSubClass.sectorid,
+                sectorName: updatedSubSubClass.sectorName
+              }
             : s
         )
       );
       setSuccess('Sub Sub Class updated successfully!');
       setVisibleEditSubSub(false);
-      setFormData({ subsubclass: '', subclassid: '' });
+      setFormData({ subsubclass: '', subclassid: '', sectorid: '' });
       setEditId(null);
       setTimeout(() => setSuccess(null), 3000);
     } catch (err) {
@@ -206,6 +255,8 @@ const SubSubClassDashboard = () => {
         setError('A Sub Sub Class with this name already exists');
       } else if (err.response?.data?.message === 'Subclass not found') {
         setError('Selected Sub Class not found');
+      } else if (err.response?.data?.message === 'Sector not found') {
+        setError('Selected Sector not found');
       } else if (err.response?.data?.message === 'Subsubclass not found') {
         setError('Sub Sub Class not found');
       } else {
@@ -237,7 +288,6 @@ const SubSubClassDashboard = () => {
         <CCol xs={12}>
           <CCard className="mb-4">
             <CCardHeader>
-              <strong>Sub Sub Classes Dashboard</strong>
               <CButton color="primary" className="float-end" onClick={handleAddSubSubOpen}>
                 Add Sub Sub Class
               </CButton>
@@ -255,7 +305,6 @@ const SubSubClassDashboard = () => {
         <CCol xs={12}>
           <CCard className="mb-4">
             <CCardHeader>
-              <strong>Sub Sub Classes Dashboard</strong>
               <CButton color="primary" className="float-end" onClick={handleAddSubSubOpen}>
                 Add Sub Sub Class
               </CButton>
@@ -274,7 +323,6 @@ const SubSubClassDashboard = () => {
       <CCol xs={12}>
         <CCard className="mb-4">
           <CCardHeader>
-            <strong>Sub Sub Classes Dashboard</strong>
             <CButton color="primary" className="float-end" onClick={handleAddSubSubOpen}>
               <CIcon icon={cilPlus} /> Add Sub Sub Class
             </CButton>
@@ -285,8 +333,9 @@ const SubSubClassDashboard = () => {
               <CTableHead>
                 <CTableRow>
                   <CTableHeaderCell scope="col">#</CTableHeaderCell>
-                  <CTableHeaderCell scope="col">Sub Sub Class Name</CTableHeaderCell>
-                  <CTableHeaderCell scope="col">Actions</CTableHeaderCell>
+                  <CTableHeaderCell scope="col">Sub Sub Class</CTableHeaderCell>
+                  <CTableHeaderCell scope="col">Sector</CTableHeaderCell>
+                  <CTableHeaderCell scope="col">Action</CTableHeaderCell>
                 </CTableRow>
               </CTableHead>
               <CTableBody>
@@ -294,7 +343,8 @@ const SubSubClassDashboard = () => {
                   subSubClasses.map((subSubClass, index) => (
                     <CTableRow key={subSubClass._id}>
                       <CTableHeaderCell scope="row">{index + 1}</CTableHeaderCell>
-                      <CTableDataCell>{subSubClass.subsubclass}</CTableDataCell> 
+                      <CTableDataCell>{subSubClass.subsubclass}</CTableDataCell>
+                      <CTableDataCell>{subSubClass.sectorName}</CTableDataCell>
                       <CTableHeaderCell>
                         <CButton
                           color="warning"
@@ -316,7 +366,7 @@ const SubSubClassDashboard = () => {
                   ))
                 ) : (
                   <CTableRow>
-                    <CTableDataCell colSpan="3">No Sub Sub Classes available.</CTableDataCell>
+                    <CTableDataCell colSpan="4">No Sub Sub Classes available.</CTableDataCell>
                   </CTableRow>
                 )}
               </CTableBody>
@@ -347,6 +397,20 @@ const SubSubClassDashboard = () => {
                     {subClasses.map((subClass) => (
                       <option key={subClass._id} value={subClass._id}>
                         {subClass.name}
+                      </option>
+                    ))}
+                  </CFormSelect>
+                  <CFormSelect
+                    name="sectorid"
+                    label="Sector"
+                    value={formData.sectorid}
+                    onChange={handleInputChange}
+                    required
+                  >
+                    <option value="">Select Sector</option>
+                    {sectors.map((sector) => (
+                      <option key={sector._id} value={sector._id}>
+                        {sector.name}
                       </option>
                     ))}
                   </CFormSelect>
@@ -387,6 +451,20 @@ const SubSubClassDashboard = () => {
                     {subClasses.map((subClass) => (
                       <option key={subClass._id} value={subClass._id}>
                         {subClass.name}
+                      </option>
+                    ))}
+                  </CFormSelect>
+                  <CFormSelect
+                    name="sectorid"
+                    label="Sector"
+                    value={formData.sectorid}
+                    onChange={handleInputChange}
+                    required
+                  >
+                    <option value="">Select Sector</option>
+                    {sectors.map((sector) => (
+                      <option key={sector._id} value={sector._id}>
+                        {sector.name}
                       </option>
                     ))}
                   </CFormSelect>
