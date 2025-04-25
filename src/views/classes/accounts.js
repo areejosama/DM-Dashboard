@@ -80,8 +80,11 @@ const MainAccountDashboard = () => {
           subSubClassesData.map(item => ({
             _id: item._id,
             name: item.subsubclass,
+            subclassid: item.subclassid?._id || item.subclassid,
+            subclassName: item.subclassid?.subclass || 'Unknown', // جلب اسم الـ Sub Class
             sectorid: item.sectorid?._id || item.sectorid,
             sectorName: item.sectorid?.Sector || 'Unknown',
+            displayName: `${item.subsubclass} (${item.subclassid?.subclass || 'Unknown'})`, // عرض الـ Sub Class بين قوسين
           }))
         );
       } else {
@@ -110,6 +113,7 @@ const MainAccountDashboard = () => {
           subsubclassName: item.subsubclassid?.subsubclass || 'Unknown',
           sectorid: item.sectorid?._id || item.sectorid,
           sectorName: item.sectorid?.Sector || item.subsubclassid?.sectorid?.Sector || 'Unknown',
+          displayName: `${item.account} (${item.subsubclassid?.subsubclass || 'Unknown'})`,
         }));
         setMainAccounts(formattedMainAccounts);
       } else {
@@ -131,7 +135,7 @@ const MainAccountDashboard = () => {
       setFormData({
         ...formData,
         subsubclassid: value,
-        sectorid: selectedSubSubClass?.sectorid || '', // تحديث الـ sectorid تلقائيًا
+        sectorid: selectedSubSubClass?.sectorid || '',
       });
     } else {
       setFormData({ ...formData, [name]: value });
@@ -194,6 +198,7 @@ const MainAccountDashboard = () => {
         subsubclassName: selectedSubSubClass?.name || 'Unknown',
         sectorid: formData.sectorid,
         sectorName: selectedSector?.name || 'Unknown',
+        displayName: `${formData.account.trim()} (${selectedSubSubClass?.name || 'Unknown'})`,
       };
 
       setMainAccounts([...mainAccounts, newMainAccount]);
@@ -253,6 +258,7 @@ const MainAccountDashboard = () => {
         subsubclassName: selectedSubSubClass?.name || 'Unknown',
         sectorid: formData.sectorid,
         sectorName: selectedSector?.name || 'Unknown',
+        displayName: `${formData.account.trim()} (${selectedSubSubClass?.name || 'Unknown'})`,
       };
       setMainAccounts(
         mainAccounts.map((m) =>
@@ -264,6 +270,7 @@ const MainAccountDashboard = () => {
                 subsubclassName: updatedMainAccount.subsubclassName,
                 sectorid: updatedMainAccount.sectorid,
                 sectorName: updatedMainAccount.sectorName,
+                displayName: updatedMainAccount.displayName,
               }
             : m
         )
@@ -398,6 +405,7 @@ const MainAccountDashboard = () => {
               </CTableBody>
             </CTable>
 
+            {/* Modal لإضافة Main Account */}
             <CModal visible={visibleAddMain} onClose={() => setVisibleAddMain(false)}>
               <CModalHeader>
                 <CModalTitle>Add Main Account</CModalTitle>
@@ -422,7 +430,7 @@ const MainAccountDashboard = () => {
                     <option value="">Select Sub Sub Class</option>
                     {subSubClasses.map((subSubClass) => (
                       <option key={subSubClass._id} value={subSubClass._id}>
-                        {subSubClass.name}
+                        {subSubClass.displayName}
                       </option>
                     ))}
                   </CFormSelect>
@@ -452,6 +460,7 @@ const MainAccountDashboard = () => {
               </CModalFooter>
             </CModal>
 
+            {/* Modal لتعديل Main Account */}
             <CModal visible={visibleEditMain} onClose={() => setVisibleEditMain(false)}>
               <CModalHeader>
                 <CModalTitle>Edit Main Account</CModalTitle>
@@ -476,7 +485,7 @@ const MainAccountDashboard = () => {
                     <option value="">Select Sub Sub Class</option>
                     {subSubClasses.map((subSubClass) => (
                       <option key={subSubClass._id} value={subSubClass._id}>
-                        {subSubClass.name}
+                        {subSubClass.displayName}
                       </option>
                     ))}
                   </CFormSelect>

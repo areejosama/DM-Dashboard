@@ -80,8 +80,11 @@ const SubAccountDashboard = () => {
           mainAccountsData.map(item => ({
             _id: item._id,
             name: item.account,
+            subsubclassid: item.subsubclassid?._id || item.subsubclassid,
+            subsubclassName: item.subsubclassid?.subsubclass || 'Unknown', // جلب اسم الـ Sub Sub Class
             sectorid: item.sectorid?._id || item.sectorid,
             sectorName: item.sectorid?.Sector || 'Unknown',
+            displayName: `${item.account} (${item.subsubclassid?.subsubclass || 'Unknown'})`, // عرض الـ Sub Sub Class بين قوسين
           }))
         );
       } else {
@@ -422,7 +425,7 @@ const SubAccountDashboard = () => {
                     <option value="">Select Main Account</option>
                     {mainAccounts.map((mainAccount) => (
                       <option key={mainAccount._id} value={mainAccount._id}>
-                        {mainAccount.name}
+                        {mainAccount.displayName}
                       </option>
                     ))}
                   </CFormSelect>
@@ -476,7 +479,7 @@ const SubAccountDashboard = () => {
                     <option value="">Select Main Account</option>
                     {mainAccounts.map((mainAccount) => (
                       <option key={mainAccount._id} value={mainAccount._id}>
-                        {mainAccount.name}
+                        {mainAccount.displayName}
                       </option>
                     ))}
                   </CFormSelect>
