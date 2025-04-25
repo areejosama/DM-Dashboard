@@ -1,4 +1,3 @@
-// src/components/FinancialDataForm.js
 import React, { useState, useEffect } from 'react';
 import {
   CCard,
@@ -20,26 +19,33 @@ import {
   CModalFooter,
   CForm,
   CFormInput,
+  CFormSelect,
 } from '@coreui/react';
 import { CIcon } from '@coreui/icons-react';
 import { cilZoom, cilPencil, cilTrash, cilPlus } from '@coreui/icons';
 import axios from 'axios';
 import { useNavigate } from 'react-router-dom';
-import AddFinancialDataPage from './addreportpage'
+import AddFinancialDataPage from './addreportpage';
 
 const FinancialDataForm = () => {
   const [financialData, setFinancialData] = useState([]);
   const [finReports, setFinReports] = useState([]);
   const [companies, setCompanies] = useState([]);
   const [reports, setReports] = useState([]);
+  const [classes, setClasses] = useState([]); // State لتخزين الـ classes
+  const [subClasses, setSubClasses] = useState([]); // State لتخزين الـ subclasses
+  const [subSubClasses, setSubSubClasses] = useState([]); // State لتخزين الـ subsubclasses
+  const [accounts, setAccounts] = useState([]); // State لتخزين الـ accounts
+  const [subAccounts, setSubAccounts] = useState([]); // State لتخزين الـ subaccounts
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
+  const [success, setSuccess] = useState(null);
   const [visibleView, setVisibleView] = useState(false);
   const [visibleEdit, setVisibleEdit] = useState(false);
   const [selectedReport, setSelectedReport] = useState(null);
-  const [editData, setEditData] = useState({ _id: '', companyid: '', FinReport_id: '' });
+  const [editData, setEditData] = useState({ _id: '', companyid: '', FinReport_id: '', allclasses: [] });
 
-  const navigate = useNavigate(); // For navigation
+  const navigate = useNavigate();
 
   const TOKEN = 'arij_eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6IjY3ZWRhMDViZDMwMDA5YzMzYzVmMjA1NSIsInJvbGUiOiJtYW5hZ2VyIiwiaWF0IjoxNzQzNjI3NjQxfQ.M5naIsuddc3UZ7Oe7ZTfABdZVYQyw_i-80MU4daCoZE';
 
@@ -55,12 +61,67 @@ const FinancialDataForm = () => {
 
   const fetchFinReports = async () => {
     try {
-      const response = await axios.get('https://deepmetrics-be.onrender.com/deepmetrics/api/v1/mainclass/finRepo', { headers: { token: TOKEN } });
+      const response = await axios.get('https://deepmetrics-be.onrender.com/deepmetrics/api/v1/mainclass/finRepo', {
+        headers: { token: TOKEN },
+      });
       console.log('Fin Reports (All Reports - Full):', JSON.stringify(response.data.data, null, 2));
-      setFinReports(response.data.data || []);
+      const formattedReports = (response.data.data || []).map(report => ({
+        ...report,
+        _id: report._id || report.FinReport_id?._id || 'Unknown',
+        reportYear: report.reportYear || report.FinReport_id?.reportYear || 'Unknown',
+        period: report.period || report.FinReport_id?.period || 'Unknown',
+      }));
+      setFinReports(formattedReports);
+
+      // استخراج الـ classes, subclasses, subsubclasses, accounts, subaccounts
+      const allClasses = [];
+      const allSubClasses = [];
+      const allSubSubClasses = [];
+      const allAccounts = [];
+      const allSubAccounts = [];
+
+      formattedReports.forEach(report => {
+        report.allclasses.forEach(cls => {
+          // Classes
+          if (cls.classid && !allClasses.some(c => c._id === cls.classid._id)) {
+            allClasses.push(cls.classid);
+          }
+          // Sub Classes
+          if (cls.subclassid && !allSubClasses.some(sc => sc._id === cls.subclassid._id)) {
+            allSubClasses.push(cls.subclassid);
+          }
+          // Sub Sub Classes
+          if (cls.subsubclassid && !allSubSubClasses.some(ssc => ssc._id === cls.subsubclassid._id)) {
+            allSubSubClasses.push(cls.subsubclassid);
+          }
+          // Accounts
+          cls.accounts.forEach(acc => {
+            if (acc.accountid && !allAccounts.some(a => a._id === acc.accountid._id)) {
+              allAccounts.push(acc.accountid);
+            }
+            // Sub Accounts
+            acc.finaldata.forEach(fd => {
+              if (fd.subaccountid && !allSubAccounts.some(sa => sa._id === fd.subaccountid._id)) {
+                allSubAccounts.push(fd.subaccountid);
+              }
+            });
+          });
+        });
+      });
+
+      setClasses(allClasses);
+      setSubClasses(allSubClasses);
+      setSubSubClasses(allSubSubClasses);
+      setAccounts(allAccounts);
+      setSubAccounts(allSubAccounts);
+
+      console.log('Extracted Classes:', allClasses);
+      console.log('Extracted SubClasses:', allSubClasses);
+      console.log('Extracted SubSubClasses:', allSubSubClasses);
+      console.log('Extracted Accounts:', allAccounts);
+      console.log('Extracted SubAccounts:', allSubAccounts);
     } catch (err) {
       console.error('Error fetching finReports:', err);
-      setError('Failed to load financial reports');
       setFinReports([]);
     }
   };
@@ -68,9 +129,28 @@ const FinancialDataForm = () => {
   const fetchFinancialData = async () => {
     try {
       setLoading(true);
-      const response = await axios.get('https://deepmetrics-be.onrender.com/deepmetrics/api/v1/mainclass/finData', { headers: { token: TOKEN } });
+      const response = await axios.get('https://deepmetrics-be.onrender.com/deepmetrics/api/v1/mainclass/finRepo', {
+        headers: { token: TOKEN },
+      });
       console.log('Financial Data (Table Data - Full):', JSON.stringify(response.data.data, null, 2));
-      setFinancialData(response.data.data || []);
+      const formattedData = (response.data.data || []).map(data => ({
+        ...data,
+        companyid: typeof data.companyid === 'object' ? data.companyid : { _id: data.companyid, name: 'Unknown' },
+        FinReport_id: typeof data.FinReport_id === 'object' ? data.FinReport_id : { _id: data.FinReport_id, reportYear: 'Unknown', period: 'Unknown' },
+        allclasses: (data.allclasses || []).map(cls => ({
+          classid: typeof cls.classid === 'object' ? cls.classid?._id || 'Unknown' : cls.classid || 'Unknown',
+          subclassid: typeof cls.subclassid === 'object' ? cls.subclassid?._id || 'Unknown' : cls.subclassid || 'Unknown',
+          subsubclassid: typeof cls.subsubclassid === 'object' ? cls.subsubclassid?._id || 'Unknown' : cls.subsubclassid || 'Unknown',
+          accounts: (cls.accounts || []).map(acc => ({
+            accountid: typeof acc.accountid === 'object' ? acc.accountid?._id || 'Unknown' : acc.accountid || 'Unknown',
+            finaldata: (acc.finaldata || []).map(fd => ({
+              subaccountid: typeof fd.subaccountid === 'object' ? fd.subaccountid?._id || 'Unknown' : fd.subaccountid || 'Unknown',
+              amount: fd.amount || 0,
+            })),
+          })),
+        })),
+      }));
+      setFinancialData(formattedData);
       setLoading(false);
     } catch (err) {
       console.error('Error fetching financial data:', err);
@@ -82,20 +162,20 @@ const FinancialDataForm = () => {
 
   const fetchCompanies = async () => {
     try {
-      const response = await axios.get('https://deepmetrics-be.onrender.com/deepmetrics/api/v1/company', { headers: { token: TOKEN } });
-      console.log('Companies Response:', JSON.stringify(response.data, null, 2));
-      const companiesData = response.data.data || [];
-      setCompanies(companiesData);
-      console.log('Companies State:', JSON.stringify(companiesData, null, 2));
+      const { data: { companies } } = await axios.get('https://deepmetrics-be.onrender.com/deepmetrics/api/v1/company', {
+        headers: { token: TOKEN },
+      });
+      setCompanies(companies || []);
     } catch (err) {
       console.error('Error fetching companies:', err);
-      setError('Failed to fetch companies');
     }
   };
 
   const fetchReports = async () => {
     try {
-      const response = await axios.get('https://deepmetrics-be.onrender.com/deepmetrics/api/v1/mainclass/finData', { headers: { token: TOKEN } });
+      const response = await axios.get('https://deepmetrics-be.onrender.com/deepmetrics/api/v1/mainclass/finRepo', {
+        headers: { token: TOKEN },
+      });
       console.log('Reports Response:', JSON.stringify(response.data.data, null, 2));
       setReports(response.data.data || []);
     } catch (err) {
@@ -103,58 +183,89 @@ const FinancialDataForm = () => {
     }
   };
 
+  // دوال مساعدة لجلب الـ name بناءً على الـ ID
+  const getClassName = (classId) => {
+    const classItem = classes.find(cls => cls._id === classId);
+    return classItem ? (classItem.name || classItem.class || 'Unknown') : 'Unknown';
+  };
+
+  const getSubClassName = (subClassId) => {
+    const subClassItem = subClasses.find(sc => sc._id === subClassId);
+    return subClassItem ? (subClassItem.subclass || 'Unknown') : 'Unknown';
+  };
+
+  const getSubSubClassName = (subSubClassId) => {
+    const subSubClassItem = subSubClasses.find(ssc => ssc._id === subSubClassId);
+    return subSubClassItem ? (subSubClassItem.subsubclass || 'Unknown') : 'Unknown';
+  };
+
+  const getAccountName = (accountId) => {
+    const accountItem = accounts.find(acc => acc._id === accountId);
+    return accountItem ? (accountItem.account || 'Unknown') : 'Unknown';
+  };
+
+  const getSubAccountName = (subAccountId) => {
+    const subAccountItem = subAccounts.find(sa => sa._id === subAccountId);
+    return subAccountItem ? (subAccountItem.subaccount || 'Unknown') : 'Unknown';
+  };
+
   const handleViewReport = (data) => {
-    const report = finReports.find(r => r.FinReport_id?._id === data._id);
+    const report = financialData.find(r => r._id === data._id);
     setSelectedReport(report);
     setVisibleView(true);
   };
 
-  // const handleEditReport = (data) => {
-  //   setEditData({
-  //     _id: data._id,
-  //     companyid: data.companyid?._id || '',
-  //     FinReport_id: data._id || '',
-  //   });
-  //   setVisibleEdit(true);
-  // };
+  const handleEditReport = (data) => {
+    setEditData({
+      _id: data._id,
+      companyid: data.companyid?._id || '',
+      FinReport_id: data.FinReport_id?._id || data.FinReport_id || '',
+      allclasses: data.allclasses || [],
+    });
+    setVisibleEdit(true);
+  };
 
-  // const deleteFinancialRepo = async (id) => {
-  //   if (!window.confirm('Are you sure you want to delete this financial report?')) {
-  //     return;
-  //   }
+  const deleteFinancialRepo = async (id) => {
+    if (!window.confirm('Are you sure you want to delete this financial report?')) {
+      return;
+    }
 
-  //   try {
-  //     console.log('Deleting financial report with ID:', id);
-  //     const response = await axios.delete(`https://deepmetrics-be.onrender.com/deepmetrics/api/v1/mainclass/finRepo/${id}`, {
-  //       headers: { token: TOKEN },
-  //     });
-  //     console.log('Delete Response:', JSON.stringify(response.data, null, 2));
+    try {
+      console.log('Deleting financial report with ID:', id);
+      const response = await axios.delete(`https://deepmetrics-be.onrender.com/deepmetrics/api/v1/mainclass/finRepo/${id}`, {
+        headers: { token: TOKEN },
+      });
+      console.log('Delete Response:', JSON.stringify(response.data, null, 2));
 
-  //     setFinReports(prevReports => prevReports.filter(report => report._id !== id));
-  //     setFinancialData(prevData => prevData.filter(data => data._id !== id));
-      
-  //     await fetchFinReports();
-  //     await fetchFinancialData();
+      setFinancialData(prevData => prevData.filter(data => data._id !== id));
+      setSuccess('Financial report deleted successfully');
+      setTimeout(() => setSuccess(null), 3000);
+    } catch (err) {
+      console.error('Error deleting financial report:', err.response ? err.response.data : err.message);
+      setError(`Failed to delete financial report: ${err.message}`);
+    }
+  };
 
-  //     alert('Financial report deleted successfully');
-  //   } catch (err) {
-  //     console.error('Error deleting financial report:', err.response ? err.response.data : err.message);
-  //     setError(`Failed to delete financial report: ${err.message}`);
-  //   }
-  // };
-
-  // const handleEditSubmit = async () => {
-  //   try {
-  //     const response = await axios.put(`https://deepmetrics-be.onrender.com/deepmetrics/api/v1/mainclass/finRepo/${editData._id}`, editData, { headers: { token: TOKEN } });
-  //     setFinReports(finReports.map(report => (report._id === editData._id ? response.data.data : report)));
-  //     setFinancialData(financialData.map(data => (data._id === editData._id ? response.data.data : data)));
-  //     setVisibleEdit(false);
-  //     alert('Edited successfully');
-  //   } catch (err) {
-  //     console.error('Error editing report:', err);
-  //     setError('Failed to edit data');
-  //   }
-  // };
+  const handleEditSubmit = async () => {
+    try {
+      const payload = {
+        allclasses: editData.allclasses,
+        companyId: editData.companyid,
+      };
+      const response = await axios.put(
+        `https://deepmetrics-be.onrender.com/deepmetrics/api/v1/mainclass/finRepo/${editData.FinReport_id}`,
+        payload,
+        { headers: { token: TOKEN } }
+      );
+      setFinancialData(financialData.map(data => (data._id === editData._id ? response.data.data : data)));
+      setSuccess('Edited successfully');
+      setVisibleEdit(false);
+      setTimeout(() => setSuccess(null), 3000);
+    } catch (err) {
+      console.error('Error editing report:', err);
+      setError('Failed to edit data');
+    }
+  };
 
   if (loading && financialData.length === 0) {
     return <div>Loading...</div>;
@@ -172,6 +283,7 @@ const FinancialDataForm = () => {
           </CCardHeader>
           <CCardBody>
             {error && <div style={{ color: 'red', marginBottom: '10px' }}>{error}</div>}
+            {success && <div style={{ color: 'green', marginBottom: '10px' }}>{success}</div>}
             <CTable>
               <CTableHead>
                 <CTableRow>
@@ -192,12 +304,12 @@ const FinancialDataForm = () => {
                         <CButton color="info" size="sm" onClick={() => handleViewReport(data)} className="me-2">
                           <CIcon icon={cilZoom} />
                         </CButton>
-                        {/* <CButton color="warning" size="sm" onClick={() => handleEditReport(data)} className="me-2">
+                        <CButton color="warning" size="sm" onClick={() => handleEditReport(data)} className="me-2">
                           <CIcon icon={cilPencil} />
                         </CButton>
                         <CButton color="danger" size="sm" onClick={() => deleteFinancialRepo(data._id)}>
                           <CIcon icon={cilTrash} />
-                        </CButton> */}
+                        </CButton>
                       </CTableDataCell>
                     </CTableRow>
                   ))
@@ -225,8 +337,8 @@ const FinancialDataForm = () => {
                     {selectedReport.allclasses && selectedReport.allclasses.length > 0 ? (
                       selectedReport.allclasses.map((classItem, classIndex) => (
                         <div key={classIndex} style={{ marginBottom: '20px', padding: '10px', border: '1px solid #ddd' }}>
-                          <p>{classItem.subclassid?.subclass || 'None'}</p>
-                          <p>{classItem.subsubclassid?.subsubclass || 'None'}</p>
+                          <p>{getSubClassName(classItem.subclassid) || 'None'}</p>
+                          <p>{getSubSubClassName(classItem.subsubclassid) || 'None'}</p>
                           {classItem.accounts && classItem.accounts.length > 0 ? (
                             classItem.accounts.map((account, accountIndex) => (
                               <div key={accountIndex} style={{ marginLeft: '20px', padding: '10px', border: '1px dashed #ccc' }}>
@@ -234,7 +346,7 @@ const FinancialDataForm = () => {
                                   account.finaldata.map((finaldata, finaldataIndex) => (
                                     <div key={finaldataIndex} style={{ marginLeft: '20px' }}>
                                       <h6>
-                                        {finaldata.subaccountid?.subaccount || 'None'} - Amount: {finaldata.amount || 'N/A'}
+                                        {getSubAccountName(finaldata.subaccountid) || 'None'} - Amount: {finaldata.amount || 'N/A'}
                                       </h6>
                                     </div>
                                   ))
@@ -253,7 +365,7 @@ const FinancialDataForm = () => {
                     )}
                   </div>
                 ) : (
-                  <p>No matching report found in finReports.</p>
+                  <p>No matching report found.</p>
                 )}
               </CModalBody>
               <CModalFooter>
@@ -261,34 +373,150 @@ const FinancialDataForm = () => {
               </CModalFooter>
             </CModal>
 
-            {/* Edit Modal
-            <CModal visible={visibleEdit} onClose={() => setVisibleEdit(false)}>
+            {/* Edit Modal */}
+            <CModal visible={visibleEdit} onClose={() => setVisibleEdit(false)} size="lg">
               <CModalHeader>
                 <CModalTitle>Edit Financial Data</CModalTitle>
               </CModalHeader>
               <CModalBody>
                 <CForm>
-                  <CFormInput
-                    type="text"
-                    label="Company ID"
+                  <CFormSelect
+                    label="Company"
                     value={editData.companyid}
                     onChange={(e) => setEditData({ ...editData, companyid: e.target.value })}
-                    placeholder="Enter company ID"
-                  />
-                  <CFormInput
-                    type="text"
-                    label="Financial Report ID"
+                    required
+                  >
+                    <option value="">Select Company</option>
+                    {companies.map((company) => (
+                      <option key={company._id} value={company._id}>
+                        {company.name}
+                      </option>
+                    ))}
+                  </CFormSelect>
+                  <CFormSelect
+                    label="Financial Report"
                     value={editData.FinReport_id}
                     onChange={(e) => setEditData({ ...editData, FinReport_id: e.target.value })}
-                    placeholder="Enter financial report ID"
-                  />
+                    required
+                  >
+                    <option value="">Select Financial Report</option>
+                    {finReports.map((report) => (
+                      <option key={report._id} value={report._id}>
+                        {report.reportYear} - {report.period}
+                      </option>
+                    ))}
+                  </CFormSelect>
+                  {/* عرض وتعديل allclasses */}
+                  {editData.allclasses.map((classItem, classIndex) => (
+                    <div key={classIndex} style={{ marginBottom: '20px', padding: '10px', border: '1px solid #ddd' }}>
+                      <h6>Class {classIndex + 1}</h6>
+                      <CFormSelect
+                        label="Class ID"
+                        value={classItem.classid || ''}
+                        onChange={(e) => {
+                          const updatedClasses = [...editData.allclasses];
+                          updatedClasses[classIndex].classid = e.target.value;
+                          setEditData({ ...editData, allclasses: updatedClasses });
+                        }}
+                      >
+                        <option value="">Select Class</option>
+                        {classes.map((cls) => (
+                          <option key={cls._id} value={cls._id}>
+                            {cls.name || cls.class || 'Unknown'}
+                          </option>
+                        ))}
+                      </CFormSelect>
+                      <CFormSelect
+                        label="Sub Class ID"
+                        value={classItem.subclassid || ''}
+                        onChange={(e) => {
+                          const updatedClasses = [...editData.allclasses];
+                          updatedClasses[classIndex].subclassid = e.target.value;
+                          setEditData({ ...editData, allclasses: updatedClasses });
+                        }}
+                      >
+                        <option value="">Select Sub Class</option>
+                        {subClasses.map((subCls) => (
+                          <option key={subCls._id} value={subCls._id}>
+                            {subCls.subclass || 'Unknown'}
+                          </option>
+                        ))}
+                      </CFormSelect>
+                      <CFormSelect
+                        label="Sub Sub Class ID"
+                        value={classItem.subsubclassid || ''}
+                        onChange={(e) => {
+                          const updatedClasses = [...editData.allclasses];
+                          updatedClasses[classIndex].subsubclassid = e.target.value;
+                          setEditData({ ...editData, allclasses: updatedClasses });
+                        }}
+                      >
+                        <option value="">Select Sub Sub Class</option>
+                        {subSubClasses.map((subSubCls) => (
+                          <option key={subSubCls._id} value={subSubCls._id}>
+                            {subSubCls.subsubclass || 'Unknown'}
+                          </option>
+                        ))}
+                      </CFormSelect>
+                      {classItem.accounts.map((account, accountIndex) => (
+                        <div key={accountIndex} style={{ marginLeft: '20px', padding: '10px', border: '1px dashed #ccc' }}>
+                          <CFormSelect
+                            label={`Account ID ${accountIndex + 1}`}
+                            value={account.accountid || ''}
+                            onChange={(e) => {
+                              const updatedClasses = [...editData.allclasses];
+                              updatedClasses[classIndex].accounts[accountIndex].accountid = e.target.value;
+                              setEditData({ ...editData, allclasses: updatedClasses });
+                            }}
+                          >
+                            <option value="">Select Account</option>
+                            {accounts.map((acc) => (
+                              <option key={acc._id} value={acc._id}>
+                                {acc.account || 'Unknown'}
+                              </option>
+                            ))}
+                          </CFormSelect>
+                          {account.finaldata.map((finaldata, finaldataIndex) => (
+                            <div key={finaldataIndex} style={{ marginLeft: '20px' }}>
+                              <CFormSelect
+                                label={`Sub Account ID ${finaldataIndex + 1}`}
+                                value={finaldata.subaccountid || ''}
+                                onChange={(e) => {
+                                  const updatedClasses = [...editData.allclasses];
+                                  updatedClasses[classIndex].accounts[accountIndex].finaldata[finaldataIndex].subaccountid = e.target.value;
+                                  setEditData({ ...editData, allclasses: updatedClasses });
+                                }}
+                              >
+                                <option value="">Select Sub Account</option>
+                                {subAccounts.map((subAcc) => (
+                                  <option key={subAcc._id} value={subAcc._id}>
+                                    {subAcc.subaccount || 'Unknown'}
+                                  </option>
+                                ))}
+                              </CFormSelect>
+                              <CFormInput
+                                label={`Amount ${finaldataIndex + 1}`}
+                                type="number"
+                                value={finaldata.amount || ''}
+                                onChange={(e) => {
+                                  const updatedClasses = [...editData.allclasses];
+                                  updatedClasses[classIndex].accounts[accountIndex].finaldata[finaldataIndex].amount = e.target.value;
+                                  setEditData({ ...editData, allclasses: updatedClasses });
+                                }}
+                              />
+                            </div>
+                          ))}
+                        </div>
+                      ))}
+                    </div>
+                  ))}
                 </CForm>
               </CModalBody>
               <CModalFooter>
                 <CButton color="secondary" onClick={() => setVisibleEdit(false)}>Cancel</CButton>
                 <CButton color="primary" onClick={handleEditSubmit}>Save Changes</CButton>
               </CModalFooter>
-            </CModal> */}
+            </CModal>
           </CCardBody>
         </CCard>
       </CCol>
