@@ -1,135 +1,148 @@
-.tree-container {
-  width: 100%;
-  overflow-x: auto; /* للتعامل مع الشاشات الصغيرة */
-  margin-top: 50px;
+
+.class-item {
+  margin-bottom: 20px;
 }
 
-.form-label{
-  margin-top: 15px;
-}
-/* الـ Row (سواء الهيدر أو الـ Sub-Account أو الـ Total) */
-.table-row {
-  display: grid;
-  grid-template-columns: 1fr 1fr 1fr; /* تخصيص العروض: Sub-Account أعرض، Previous وCurrent متساويين */
-  align-items: center;
-  width: 100%;
-  padding: 5px 0;
+.sub-sub-class {
+  border-left: 2px solid #e0e0e0;
+  padding-left: 10px;
 }
 
-/* الخلايا داخل الـ Row */
-.table-cell {
-  padding: 8px;
-  text-align: center;
-}
-
-/* تخصيص المحاذاة لعمود Sub-Account */
-.sub-account-header,
-.sub-account-name {
-  text-align: left;
-}
-
-/* تنسيق الهيدر */
-.table-header {
-  background-color: #f5f5f5;
-  font-weight: bold;
-}
-
-/* تنسيق الـ Total Row */
-.total-row {
-  font-weight: bold;
-  border-top: 2px solid #ddd;
-  margin-top: 10px;
-  padding-top: 10px;
-}
-
-.total-row .sub-account-name {
-  font-weight: bold;
-}
-
-/* تنسيق الـ Input داخل Current Report */
-.current-report input {
-  width: 50%;
-  padding: 5px;
-  box-sizing: border-box;
-  border: 1px solid #ccc;
-  border-radius: 4px;
-}
-
-/* تنسيق الـ Expand Button */
 .expand-btn {
   background: none;
   border: none;
+  font-weight: bold;
+  color: #333;
   cursor: pointer;
-  text-align: left;
-  width: 100%;
+  margin-bottom: 10px;
 }
 
-/* Media Query للشاشات الصغيرة */
+.add-sub-account {
+  margin-bottom: 20px;
+}
+
+.sub-account-select {
+  width: 250px;
+  padding: 8px;
+  border-radius: 4px;
+  border: 1px solid #ccc;
+}
+
+.sub-account-table {
+  width: 100%;
+  border-collapse: collapse;
+  margin-top: 10px;
+}
+
+.table-row {
+  display: flex;
+  align-items: center;
+  padding: 12px 0; 
+  border-bottom: 1px solid #e0e0e0;
+}
+
+.table-header {
+  font-weight: bold;
+  background-color: #f5f5f5;
+  padding: 12px 0;
+}
+
+.table-cell {
+  flex: 1;
+  padding: 0 25px; 
+  text-align: center;
+  min-width: 120px; 
+}
+
+.sub-account-header,
+.sub-account-name {
+  flex: 2.5; 
+  text-align: left;
+}
+
+.previous-report-header,
+.previous-report {
+  flex: 1.5; 
+  text-align: center;
+}
+
+.current-report-header,
+.current-report {
+  flex: 1.5; 
+  text-align: center;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+.action-header,
+.action {
+  flex: 1; 
+  text-align: center;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+.amount-input {
+  width: 120px; 
+  padding: 6px;
+  border-radius: 4px;
+  border: 1px solid #ccc;
+  margin: 0 auto; 
+}
+
+.delete-btn {
+  padding: 6px 25px;
+  font-size: 12px;
+  margin: 0 auto; 
+}
+
+.total-row {
+  background-color: #f9f9f9;
+  font-weight: bold;
+  margin-top: 10px;
+}
+
+.divider {
+  border: 0;
+  border-top: 1px solid #d0d0d0;
+  margin: 20px 0;
+}
+
+.save-main-class-btn,
+.submit-report-btn {
+  padding: 10px 20px;
+  font-size: 14px;
+}
+
+.tree-container {
+  padding: 20px 0;
+}
+
 @media (max-width: 768px) {
   .table-row {
-    grid-template-columns: 1fr; /* كل شيء في عمود واحد */
-    gap: 15px;
+    flex-direction: column;
+    align-items: flex-start;
   }
 
   .table-cell {
-    text-align: left;
+    width: 100%;
+    margin-bottom: 10px;
     padding: 5px 0;
   }
 
-  .previous-report-header::before,
-  .previous-report::before,
-  .current-report-header::before,
-  .current-report::before {
-    content: attr(data-label);
-    font-weight: bold;
-    display: inline-block;
-    margin-right: 20px;
-  }
-
-  .current-report input {
+  .sub-account-select {
     width: 100%;
   }
-}
 
-.add-sub-account-btn {
-  background-color: #28a745;
-  color: white;
-  border: none;
-  padding: 5px 10px;
-  border-radius: 4px;
-  cursor: pointer;
-  margin-left: 10px;
-}
+  .amount-input {
+    width: 100%;
+    margin: 5px 0;
+  }
 
-.add-sub-account-btn:hover {
-  background-color: #218838;
-}
-
-.add-sub-account-container {
-  display: flex;
-  align-items: center;
-  margin-top: 10px;
-  margin-bottom: 10px;
-  margin-left: 15px; /* محاذاة مع الـ Sub-Accounts */
-}
-
-.remove-sub-account-btn {
-  background-color: #dc3545;
-  color: white;
-  border: none;
-  padding: 5px 10px;
-  border-radius: 4px;
-  cursor: pointer;
-  margin-left: 10px;
-}
-
-.remove-sub-account-btn:hover {
-  background-color: #c82333;
-}
-
-.no-sub-accounts-message {
-  margin-top: 10px;
-  margin-left: 15px;
-  color: #666;
-  font-style: italic;
+  .delete-btn {
+    width: 100%;
+    margin: 5px 0;
+  }
 }
