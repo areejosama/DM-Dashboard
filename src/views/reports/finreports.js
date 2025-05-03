@@ -32,11 +32,11 @@ const FinancialDataForm = () => {
   const [finReports, setFinReports] = useState([]);
   const [companies, setCompanies] = useState([]);
   const [reports, setReports] = useState([]);
-  const [classes, setClasses] = useState([]); // State لتخزين الـ classes
-  const [subClasses, setSubClasses] = useState([]); // State لتخزين الـ subclasses
-  const [subSubClasses, setSubSubClasses] = useState([]); // State لتخزين الـ subsubclasses
-  const [accounts, setAccounts] = useState([]); // State لتخزين الـ accounts
-  const [subAccounts, setSubAccounts] = useState([]); // State لتخزين الـ subaccounts
+  const [classes, setClasses] = useState([]);
+  const [subClasses, setSubClasses] = useState([]);
+  const [subSubClasses, setSubSubClasses] = useState([]);
+  const [accounts, setAccounts] = useState([]);
+  const [subAccounts, setSubAccounts] = useState([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
   const [success, setSuccess] = useState(null);
@@ -290,6 +290,7 @@ const FinancialDataForm = () => {
                   <CTableHeaderCell scope="col">#</CTableHeaderCell>
                   <CTableHeaderCell scope="col">Company</CTableHeaderCell>
                   <CTableHeaderCell scope="col">Created At</CTableHeaderCell>
+                  <CTableHeaderCell scope="col">Period - Report Year</CTableHeaderCell>
                   <CTableHeaderCell scope="col">Actions</CTableHeaderCell>
                 </CTableRow>
               </CTableHead>
@@ -300,6 +301,9 @@ const FinancialDataForm = () => {
                       <CTableHeaderCell scope="row">{index + 1}</CTableHeaderCell>
                       <CTableDataCell>{data.companyid?.name || 'Unknown'}</CTableDataCell>
                       <CTableDataCell>{new Date(data.createdAt).toLocaleDateString()}</CTableDataCell>
+                      <CTableDataCell>
+                        {data.FinReport_id?.period || 'Unknown'} - {data.FinReport_id?.reportYear || 'Unknown'}
+                      </CTableDataCell>
                       <CTableDataCell>
                         <CButton color="info" size="sm" onClick={() => handleViewReport(data)} className="me-2">
                           <CIcon icon={cilZoom} />
@@ -315,7 +319,7 @@ const FinancialDataForm = () => {
                   ))
                 ) : (
                   <CTableRow>
-                    <CTableDataCell colSpan="4">No Financial Data available.</CTableDataCell>
+                    <CTableDataCell colSpan="5">No Financial Data available.</CTableDataCell>
                   </CTableRow>
                 )}
               </CTableBody>
